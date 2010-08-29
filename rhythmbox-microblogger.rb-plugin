@@ -1,0 +1,9 @@
+[RB Plugin]
+Loader=python
+Module=rhythmbox-microblogger
+IAge=1
+Name=Microblogger
+Description=Something!
+Authors=Ali Vakilzade <ali.vakilzade@gmail.com>
+Copyright=Copyright © 2010 Ali Vakilzade
+Website=http://www.rhythmbox.org/

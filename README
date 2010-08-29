@@ -1,0 +1,48 @@
+Rhythmbox MicroBlogger
+
+	Ali Vakilzade <ali.vakilzade [--at--] gmail [--dot--] com>
+
+DESCRIPTION
+
+  A simple plugin to send current music information to a micro blogging service
+
+INSTALL
+  1- Remove older version
+    (If you have)
+
+  2- install from git or archive
+    git is recommended
+
+    from git:
+      cd ~/.gnome2/rhythmbox/plugins/
+      git clone git://github.com/aliva/Rhythmbox-Microblogger.git
+
+    from archive:
+      extract downloaded archive to ~/.gnome2/rhythmbox/plugins/
+      you should have __init__.py here
+      ~/.gnome2/rhythmbox/plugins/rhythmbox-microblogger/__init__.py
+
+  3- run/restart Rhythmbox active this plugin and add accounts!
+
+LICENSE
+
+  microblogger is distributed under the GPL Version 3.
+
+
+THANKS
+
+  @b3rsam in identi.ca
+    idea and testing
+  @bavatar in identica
+    helping in send function
+  @badjoker in identica
+    calling me 'koskhol'
+  @aliva in identica
+    writing this plugin! :D
+  Gwibber
+    I used their icons for toolbar
+
+IMPORTANT
+  This plugin was only tested with identi.ca and I hope it works with twitter
+  send me if works/didn't work.
+    (You can change the message style from the first entry box within preferences window)
