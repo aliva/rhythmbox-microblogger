@@ -69,7 +69,7 @@ class microblogger(rb.Plugin):
         dialog.vbox.pack_start(w)
         self.ConfDialogWidgets['style']=w
 
-        w=gtk.Label('Valid Meta data:\n{title}\n{genre}\n{artist}\n{album}\n{rate}\n{year}\n{pcount}\n')
+        w=gtk.Label('Valid Meta data:\n{title} {genre} {artist} {album} {rate} {year} {pcount}\nUse {{ for { and }} for }')
         dialog.vbox.pack_start(w)
 
         w=gtk.CheckButton('edit notice before send')
@@ -77,11 +77,11 @@ class microblogger(rb.Plugin):
         dialog.vbox.pack_start(w)
         self.ConfDialogWidgets['edit']=w
 
-        w=gtk.Button(stock=gtk.STOCK_ADD)
+        w=gtk.Button('_Add account')
         w.connect('clicked', self.add_account, dialog)
         dialog.vbox.pack_start(w)
 
-        w=gtk.Button(stock=gtk.STOCK_REMOVE)
+        w=gtk.Button('_Remove account')
         w.connect('clicked', self.remove_account, dialog)
         dialog.vbox.pack_start(w)
 
