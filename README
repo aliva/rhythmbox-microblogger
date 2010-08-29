@@ -15,7 +15,7 @@ INSTALL
 
     from git:
       cd ~/.gnome2/rhythmbox/plugins/
-      git clone git://github.com/aliva/Rhythmbox-Microblogger.git
+      git clone git://github.com/aliva/rhythmbox-microblogger.git
 
     from archive:
       extract downloaded archive to ~/.gnome2/rhythmbox/plugins/
