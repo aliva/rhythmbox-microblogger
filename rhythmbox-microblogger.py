@@ -364,11 +364,12 @@ class microblogger(rb.Plugin):
         self.entrybox['entry'].set_sensitive(False)
 
         try:
-            urllib2.urlopen(msg[0], '')
+            url=urllib2.urlopen(msg[0], '')
         except Exception as err:
             self.entrybox['box'].show_all()
             self.entrybox['send'].set_label('S_end %s' % err)
         else:
+            url.close()
             self.entrybox['box'].hide_all()
         finally:
             self.entrybox['send'].set_sensitive(True)
