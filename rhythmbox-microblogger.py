@@ -362,6 +362,7 @@ class microblogger(rb.Plugin):
         self.entrybox['send'].set_label('S_ending...')
         self.entrybox['send'].set_sensitive(False)
         self.entrybox['entry'].set_sensitive(False)
+        self.entrybox['cancel'].set_sensitive(False)
 
         try:
             url=urllib2.urlopen(msg[0], '')
@@ -374,3 +375,4 @@ class microblogger(rb.Plugin):
         finally:
             self.entrybox['send'].set_sensitive(True)
             self.entrybox['entry'].set_sensitive(True)
+            self.entrybox['cancel'].set_sensitive(True)
