@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+__version__='0.1.1'
+
 import rb
 import rhythmdb
 import gtk
@@ -66,15 +68,15 @@ class microblogger(rb.Plugin):
         
         w=gtk.Entry()
         w.set_text(self.set['style'])
-        dialog.vbox.pack_start(w)
+        dialog.vbox.pack_start(w, False, False)
         self.ConfDialogWidgets['style']=w
 
         w=gtk.Label('Valid Meta data:\n{title} {genre} {artist} {album} {rate} {year} {pcount}\nUse {{ for { and }} for }')
-        dialog.vbox.pack_start(w)
+        dialog.vbox.pack_start(w, False, False)
 
         w=gtk.CheckButton('edit notice before send')
         w.set_active(self.set['edit'])
-        dialog.vbox.pack_start(w)
+        dialog.vbox.pack_start(w, False, False)
         self.ConfDialogWidgets['edit']=w
 
         w=gtk.Button('_Add account')
@@ -83,7 +85,7 @@ class microblogger(rb.Plugin):
 
         w=gtk.Button('_Remove account')
         w.connect('clicked', self.remove_account, dialog)
-        dialog.vbox.pack_start(w)
+        dialog.vbox.pack_start(w, False, False)
 
         dialog.show_all()
         return dialog
