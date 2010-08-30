@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__='0.1.1'
+__version__='0.2'
 
 import rb
 import rhythmdb
@@ -24,6 +24,7 @@ import gtk
 import os
 import urllib
 import urllib2
+import threading
 
 ui_toolbar_button = '''
 <ui>
@@ -42,6 +43,7 @@ AccountType=('identica', 'twitter', 'statusnet')
 class microblogger(rb.Plugin):
     def __init__ (self):
         rb.Plugin.__init__(self)
+        gtk.gdk.threads_init()
 
     def activate(self, shell):
         self.shell=shell
@@ -344,7 +346,6 @@ class microblogger(rb.Plugin):
             del self.CurrentAccount
             return
         acnt=self.CurrentAccount
-        self.entrybox['send'].set_label('S_ending...')
 
         pwd_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         pwd_mgr.add_password(None, acnt['api'], acnt['user'], acnt['password'])
@@ -353,10 +354,22 @@ class microblogger(rb.Plugin):
         urllib2.install_opener(opener)
 
         msg=urllib.urlencode({'status':text,'source':'Rhythmbox'})
+
+        url_open=acnt['api']+'/statuses/update.json?%s' % msg
+        threading.Thread(target=self.send_thread, args=(url_open,)).start()
+
+    def send_thread(self, *msg):
+        self.entrybox['send'].set_label('S_ending...')
+        self.entrybox['send'].set_sensitive(False)
+        self.entrybox['entry'].set_sensitive(False)
+
         try:
-            urllib2.urlopen(acnt['api']+'/statuses/update.json?%s' % msg, '')
+            urllib2.urlopen(msg[0], '')
         except Exception as err:
             self.entrybox['box'].show_all()
             self.entrybox['send'].set_label('S_end %s' % err)
         else:
             self.entrybox['box'].hide_all()
+        finally:
+            self.entrybox['send'].set_sensitive(True)
+            self.entrybox['entry'].set_sensitive(True)
