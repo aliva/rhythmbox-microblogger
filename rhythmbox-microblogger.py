@@ -256,9 +256,11 @@ class microblogger(rb.Plugin):
 
         self.type=text
         if text=='identica':
-            self.entry.set_text('http://identi.ca/api')
+            self.entry.set_text('https://identi.ca/api')
         elif text=='twitter':
-            self.entry.set_text('http://www.twitter.com/api')
+            #self.entry.set_text('https://www.twitter.com/api')
+            self.entry.set_text('https://api.twitter.com/1')
+
         else:
             self.entry.set_text('')
 
