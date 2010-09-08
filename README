@@ -1,10 +1,41 @@
-IMPORTANT:
-	This version on git DOES NOT work.
-	working on the new version.
+Rhythmbox MicroBlogger 0.2.1
 
-The old archive works get it from here
-	http://github.com/aliva/rhythmbox-microblogger/downloads
+	Ali Vakilzade <ali.vakilzade [--at--] gmail [--dot--] com>
 
-I have created a page on identi.ca too:
-	http://identi.ca/group/rhythmboxmicroblogger
-you can send to group with !rbmb
+DESCRIPTION
+
+  A simple plugin to send current music information to a micro blogging service
+
+INSTALL
+  0- If you use ArchLinux install from here and jump to step 2
+    http://aur.archlinux.org/packages.php?ID=40403
+
+  1-
+    cd ~/.gnome2/rhythmbox/plugins/
+    git clone git://github.com/aliva/rhythmbox-microblogger.git
+
+  2- run/restart Rhythmbox active this plugin 'microblogger' and add accounts!
+
+  3- now a button will appear in rhythmbox toolbar. use that for sending notice
+
+LICENSE
+
+  microblogger is distributed under the GPL Version 3.
+
+
+THANKS
+
+  @b3rsam in identi.ca
+    idea and testing
+  @bavatar in identica
+    helping in send function
+  @chalist in identica
+    Reporting first bug!
+  Gwibber
+    I used their icons for toolbar
+  @aliva in identica
+    writing this plugin! :D
+
+IMPORTANT
+  * This plugin was only tested with identi.ca and I hope it works with twitter
+    send me if works/didn't work.
