@@ -1,9 +1,7 @@
 Rhythmbox MicroBlogger 0.4
-
-	Ali Vakilzade <ali.vakilzade [--at--] gmail [--dot--] com>
+  Ali Vakilzade <ali.vakilzade [--at--] gmail [--dot--] com>
 
 DESCRIPTION
-
   A simple plugin to send current music information to a micro blogging service
 
 INSTALL
@@ -21,12 +19,9 @@ INSTALL
   4- for more info check our identica page <http://identi.ca/group/rhythmboxmicroblogger>
 
 LICENSE
-
   microblogger is distributed under the GPL Version 3.
 
-
 THANKS
-
   zcopley in #statusnet IRC:
     I know he is so angry about me :D
   @sloshy in identica
@@ -44,5 +39,5 @@ THANKS
     writing this plugin! :D
 
 IMPORTANT
-  * This plugin was only tested with identi.ca and I hope it works with twitter
-    send me if works/didn't work.
+  * when I change the name of directory from 'rhythmbox-micoblogger' to something else
+    plugin can not find images. so can not be activated.
