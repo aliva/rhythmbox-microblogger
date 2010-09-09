@@ -28,11 +28,14 @@ import base64
 import gconf
 import gtk
 import threading
+import time
 import webbrowser
 
 import tweepy
 
 # --------------------------------------------------------------------------------
+
+DEFAULT_TEXT_LENGTH=140
 
 DEFAULT_TEMPLATE='[Rhythmbox] {title} by {artist} from {album}'
 
@@ -138,7 +141,7 @@ class microblogger(rb.Plugin):
         self.SBox['send'].set_label('_Send as %s in %s' %(account['user'], account['type']))
         self.SBox['send'].set_data('key', key)
 
-        if self.SettingsClass.conf['editbefore'] or self.SBox['entry'].get_text_length()>140:
+        if self.SettingsClass.conf['editbefore'] or self.SBox['entry'].get_text_length()>DEFAULT_TEXT_LENGTH:
             self.SBox['box'].show_all()
         else:
             self.send(None)
@@ -186,6 +189,8 @@ class microblogger(rb.Plugin):
             self.SBox['box'].set_sensitive(True)
             self.SBox['send'].set_label('S_end %s' % err)
         else:
+            self.SBox['entry'].set_text('---------- Message posted successfully! ----------')
+            time.sleep(5)
             self.SBox['box'].hide_all()
         finally:
             self.SBox['box'].set_sensitive(True)
@@ -277,8 +282,8 @@ class microblogger(rb.Plugin):
 
     def SBoxEntryChanged(self, entry):
         length=entry.get_text_length()
-        self.SBox['label'].set_text(' %d ' % (140-length))
-        self.SBox['send'].set_sensitive(0<length<=140)
+        self.SBox['label'].set_text(' %d ' % (DEFAULT_TEXT_LENGTH-length))
+        self.SBox['send'].set_sensitive(0<length<=DEFAULT_TEXT_LENGTH)
 
     def SBoxCancel(self, button):
         self.SBox['box'].hide_all()
@@ -318,7 +323,7 @@ class microblogger(rb.Plugin):
         self.SBox['entry']=w
 
         # string len label
-        w=gtk.Label(' 140 ')
+        w=gtk.Label(' %s ' % DEFAULT_TEXT_LENGTH)
         box.pack_start(w, False, False)
         self.SBox['label']=w
 
