@@ -345,8 +345,8 @@ class microblogger(rb.Plugin):
 
         for key in conf['accountsid']:
             action=gtk.Action('SendNotice-%d' % key,
-                              _('Send'),
                               _('%s') % conf['accountslist'][key]['user'],
+                              _('Send as %s to %s') % (conf['accountslist'][key]['user'], conf['accountslist'][key]['type']),
                               'rb-microblogger-%s' % conf['accountslist'][key]['type'])
             activate_id = action.connect('activate', self.SendClicked, key)
             action_group = gtk.ActionGroup('MicroBloggerPluginActions-%d'% key)
