@@ -5,12 +5,18 @@ DESCRIPTION
   A simple plugin to send current music information to a micro blogging service
 
 INSTALL
-  0- If you use ArchLinux install from here and jump to step 2
-    http://aur.archlinux.org/packages.php?ID=40403
+  0-
+    from git (last version)
+      cd ~/.gnome2/rhythmbox/plugins/
+      git clone git://github.com/aliva/rhythmbox-microblogger.git
 
-  1-
-    cd ~/.gnome2/rhythmbox/plugins/
-    git clone git://github.com/aliva/rhythmbox-microblogger.git
+    from Repositories
+      Arch Linux       : http://aur.archlinux.org/packages.php?ID=40403
+      Frugalware Linux : http://frugalware.org/packages/102940
+
+    from archive:
+      cd ~/.gnome2/rhythmbox/plugins/
+      tar -xvf rhythmbox-microblogger-[xxx].tar.gz
 
   2- run/restart Rhythmbox active this plugin 'microblogger' and add accounts!
 
