@@ -11,7 +11,8 @@ INSTALL
       git clone git://github.com/aliva/rhythmbox-microblogger.git
 
     from Repositories
-      Arch Linux       : http://aur.archlinux.org/packages.php?ID=40403
+      Arch Linux       : http://aur.archlinux.org/packages.php?ID=40403 (last version from git)
+                       : http://aur.archlinux.org/packages.php?ID=40596 (stable package)
       Frugalware Linux : http://frugalware.org/packages/102940
 
     from archive:
