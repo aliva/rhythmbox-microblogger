@@ -20,8 +20,8 @@ INSTALL
     from archive:
       tar -xvf rhythmbox-microblogger-[xxx].tar.gz
       cd [output]
-	  make
-	    (run make as current user to install for that user)
+      make
+        (run make as current user to install for that user)
 
   1- run/restart Rhythmbox active this plugin 'microblogger' and add accounts!
 
