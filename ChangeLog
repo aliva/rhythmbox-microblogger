@@ -1,2 +1,21 @@
-0.4.2, 2010-Sep-14:
-	* Creating this file ~4 days after releasing this version.
+0.4.2, 2010-Sep-12:
+    * little improves
+
+0.4.0, 2010-Sep-09:
+    * there is noting. I don't know why I changed tag. lol
+
+0.3.1, 2010-Sep-09:
+    * oauth support added using tweepy module.
+    * twitter works!
+
+0.2.1, 2010-Aug-31:
+    * closes url after sending notice
+
+0.2.0, 2010-Aug-31:
+    * support for thread added (ui won't freeze any more)
+
+0.1.1, 2010-Aug-31:
+    * conf-dialog improved
+
+0.1.0, 2010-Aug-29:
+    * First release 
