@@ -54,18 +54,6 @@ TWITTER={
     'maxlen':140,
 }
 
-FRIENF_FEED={
-    'key'   :'',
-    'secret':'',
-    'request_token':'https://friendfeed.com/account/oauth/request_token',
-    'access_token' :'https://friendfeed.com/account/oauth/access_token',
-    'authorization':'https://friendfeed.com/account/oauth/authorize',
-    'post': 'https://twitter.com/statuses/update.json',
-    'call_back':None,
-    'oauth':True,
-    'maxlen':140,
-}
-
 class AddAccountRequest():
     def __init__(self):
         self.type=None
