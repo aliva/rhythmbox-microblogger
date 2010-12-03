@@ -1,4 +1,4 @@
-Rhythmbox MicroBlogger 0.4
+Rhythmbox MicroBlogger
 
 DESCRIPTION
   A simple plugin to send current music information to a micro blogging service
@@ -6,34 +6,52 @@ DESCRIPTION
 AUTHORS
   Ali Vakilzade <ali.vakilzade [--at--] gmail [--dot--] com>
 
+LINKS
+
+  page on freashmeat (please vote)  : http://goo.gl/Uu8yM
+  page on ohloh (please vote)       : http://goo.gl/YLCI1
+  page on github (report bugs here) : http://goo.gl/8eDjx
+
+  group on identi.ca                : http://goo.gl/Lnrmv
+
+  screen shot                       : http://goo.gl/CBehH
+
+
 INSTALL
   0-
     from git (last version)
       mkdir -p ~/.gnome2/rhythmbox/plugins
       cd ~/.gnome2/rhythmbox/plugins
       git clone git://github.com/aliva/rhythmbox-microblogger.git
-        (You don't need to run make file)
 
     from Repositories
-      Arch Linux       : http://aur.archlinux.org/packages.php?ID=40403 (last version from git)
-                       : http://aur.archlinux.org/packages.php?ID=40596 (stable package)
-      Frugalware Linux : http://frugalware.org/packages/102940
+      Arch Linux                    : http://goo.gl/HwBvX (last version from git)
+                                    : http://goo.gl/pA7aU (stable package)
+      Frugalware Linux              : http://goo.gl/DFFu3
 
     from archive:
       tar -xvf rhythmbox-microblogger-[xxx].tar.gz
-      cd [output]
-      make
-        (run make as current user to install for that user)
+      mkdir -p ~/.gnome2/rhythmbox/plugins
+      cp rhythmbox-microblogger ~/.gnome2/rhythmbox/plugins -Rf
 
   1- run/restart Rhythmbox active this plugin 'microblogger' and add accounts!
 
   2- now a button will appear in rhythmbox toolbar. use that for sending notice
 
-  3- for more info check our identica page <http://identi.ca/group/rhythmboxmicroblogger>
+  3- If you had problems. start rhythmbox with this command (debug mode)
+        rhythmbox -D rhythmbox-microblogger
+     and check output.
 
 IMPORTANT
   * when I change the name of directory from 'rhythmbox-micoblogger' to something else
     plugin can not find images. so can not be activated.
+
+  * You need these packages for this plugin (package names in Fedora)
+    - Rhythmbox
+    - python
+    - gnome-python2-gconf
+    - python-notify
+    -- On other distros you may need python extra packages such as urllib, hashlib ....
 
 COPYING
   microblogger is distributed under the GPL Version 3.
