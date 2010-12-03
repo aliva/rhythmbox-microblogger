@@ -220,15 +220,14 @@ class Post:
         except Exception as err:
             w=get('type')
             w.set_text('Err: %s' % err)
-            self.mb.sending=False
             return
+        finally:
+            self.mb.sending=False
         
-        notif=pynotify.Notification('Message sucessfully send to %s' % conf['alias'],
+        notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
                                     self.mb.find_file('icon/%s.png' % conf['type']))
         notif.show()
-        
-        self.mb.sending=False
         
         w=get('general')
         w.set_sensitive(True)
