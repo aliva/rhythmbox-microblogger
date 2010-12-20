@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__='0.5.0'
+__version__='0.5.1'
 __auther__ ='Ali Vakilzade'
 __name__   ='rhythmbox-microblogger'
 
@@ -70,7 +70,7 @@ class microblogger(rb.Plugin):
         
         self.sending=False
         
-        #self.update_id=self.db.connect('load-complete', self._check_4_update)
+        threading.Thread(target=self._check_4_update).start()
 
     def deactivate(self, shell):
         self.remove_ui()
@@ -221,6 +221,9 @@ class microblogger(rb.Plugin):
         }
         
         for item in items:
+            text=text.replace('#'+item, '#'+str(items[item]).replace(' ', '_'))
+
+        for item in items:
             text=text.replace(item, str(items[item]))
             
         entry.set_text(text)
@@ -228,19 +231,13 @@ class microblogger(rb.Plugin):
     def _entry_icon_press(self, entry, pos, event): 
         entry.set_text('')
         
-    def _check_4_update(self, db):
-        self.db.disconnect(self.update_id)
-        
+    def _check_4_update(self):        
         print 'Checking for updates...'
         
-        gtk.gdk.threads_enter()
         try:
             link=urllib.urlopen('https://github.com/downloads/aliva/rhythmbox-microblogger/VERSION')
         except Exception as err:
-            return False
-        finally:
-            gtk.gdk.threads_leave()
-        
+            return      
         if link.code!=200:
             return
         
@@ -248,31 +245,31 @@ class microblogger(rb.Plugin):
         link.close()
         
         f=f.split('\n')[0]
-        f=f.split(':')
+        f=f.split('=')
         
         if f[0]!='version':
-            return False
+            return
         
         f=f[1]
         f=f.split('.')
         f=[int(x) for x in f]
         
-        text=''
-        
+
+        old=False
+       
         ver=__version__.split('.')
         ver=[int(x) for x in ver]
         
-        if f[0]>ver[0]:
-            text='RhythmboxMicroBlogger has a major upgrade'
+        if   f[0]>ver[0]:
+            old=True
         elif f[0]==ver[0] and f[1]>ver[1]:
-            text='RhythmboxMicroBlogger has an upgrade'
-        elif f[0]==ver[0] and f[1]==ver[0] and f[2]>ver[2]:
-            text='RhythmboxMicroBlogger has a minor upgrade'
-         
-        if text=='':
-            return False
-        
-        notif=pynotify.Notification(text)
+            old=True
+        elif f[0]==ver[0] and f[1]==ver[1] and f[2]>ver[2]:
+            old=True
+
+        if not old:
+            return
+
+        notif=pynotify.Notification('Updates available for MicroBlogger Plugin',
+                                    'version %d.%d.%d is ready!' % (f[0], f[1], f[2]))
         notif.show()
-        
-        return False

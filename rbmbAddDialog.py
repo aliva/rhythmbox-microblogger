@@ -54,8 +54,12 @@ class AddDialog(AddAccountRequest):
         del self.assistant
     
     def _forward_page_func(self, page):
-        if page==6:
+        # TODO
+        # Update this function
+        if self.pages==None:
             return -1
+
+        page_id=self._get_page_id(page)
         type=self._get_account_type()
         self.request_set_type(type)
         
@@ -156,6 +160,12 @@ class AddDialog(AddAccountRequest):
             if page[5]==id:
                 return page[1]
         return -1
+
+    def _get_page_id(self, index):
+        for page in self.pages:
+            if page[1]==index:
+                return page[5]
+        return None
     
     def _authorize_clicked(self, button):
         page=self.pages[1]
@@ -192,9 +202,6 @@ class AddDialog(AddAccountRequest):
             self.assistant.set_page_complete(page[0], page[4])
             self._set_hint('Use another alias\n%s is not unique' % self.alias)
             return
-        
-        #TODO
-        #check multi alias
         
         page[4]=bool(len)
         self.assistant.set_page_complete(page[0], page[4])

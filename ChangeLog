@@ -1,16 +1,21 @@
-0.5.0, 2010-Sec-1:
+0.5.1, 2010-Dec-5:
+    * checks plugin updates
+    * use tags in template 
+        - Eg: add #{artist} in template and it will replaced with #music_artist instead of music artist.
+
+0.5.0, 2010-Dec-1:
     * oauth module changed from tweepy to python-oauth2
     * code was written from base
-    * interace improved a lot!!
+    * interface improved
     * uses libnotify
-    * in time text convert added
-        * if you enter {title} in message. it will chaged to music title. check configure window for more nicks.
+    * in-time text replace
+        - if you enter {title} in message. it will changed to music title. check configure window for more.
 
 0.4.2, 2010-Sep-12:
     * little improves
 
 0.4.0, 2010-Sep-09:
-    * there is noting. I don't know why I changed tag. lol
+    * there is noting. I don't remember why I changed tag. lol (maybe some unpushed/uncommited changes??)
 
 0.3.1, 2010-Sep-09:
     * oauth support added using tweepy module.

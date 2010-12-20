@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__='0.5.0'
+__version__='0.5.1'
 __auther__ ='Ali Vakilzade'
 __name__   ='rhythmbox-microblogger'
 
@@ -33,7 +33,7 @@ KEYS={
 }
 
 DEFAULT={
-    'template'  :'[Rhythmbox] {title} by {artist} from {album}',
+    'template'  :'[Rhythmbox] {title} by #{artist} from {album}',
     'a_list'    :[],
 }
 
@@ -55,6 +55,9 @@ class Settings:
             return None
         
         ver=client.get_string(KEYS['version'])
+        if ver=='0.5.0':
+            client.set_string(KEYS['template'], DEFAULT['template'])
+
         ver=ver.split('.')
         if int(ver[1])<5:
             self._remove_conf(None)
