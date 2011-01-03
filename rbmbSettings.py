@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__='0.5.1'
 __auther__ ='Ali Vakilzade'
 __name__   ='rhythmbox-microblogger'
+__version__='0.5.1'
 
 import base64
 import gconf

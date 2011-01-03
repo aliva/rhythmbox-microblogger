@@ -18,9 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__='0.5.1'
+
 __auther__ ='Ali Vakilzade'
 __name__   ='rhythmbox-microblogger'
+from rbmbSettings import __version__
 
 import gtk
 import pynotify
@@ -162,6 +163,8 @@ class microblogger(rb.Plugin):
         
         conf=self.settings.conf['a'][alias]
         
+        self.pl_entry=self.pl.get_playing_entry()
+
         w=get('type')
         w.set_from_stock('rbmb-'+ conf['type'], gtk.ICON_SIZE_BUTTON)
         
@@ -174,6 +177,7 @@ class microblogger(rb.Plugin):
         w=get('entry')
         w.set_progress_fraction(0)
         w.set_text(self.settings.conf['template'])
+        w.grab_focus()
         
         w=get('send')
         w.set_sensitive(True)
@@ -194,7 +198,7 @@ class microblogger(rb.Plugin):
     def _entry_changed(self, entry):
         maxlen=self.settings.conf['a'][self.alias]['maxlen']
         if maxlen==0:
-            return
+            maxlen=140
         
         len=entry.get_text_length()
         
@@ -204,10 +208,10 @@ class microblogger(rb.Plugin):
         entry.set_progress_fraction(float(len)/maxlen)
         
         send=self.boxui.get_object('send')
-        send.set_sensitive(len<=maxlen)
+        send.set_sensitive(0<len<=maxlen)
         
         text=entry.get_text()
-        pl_entry=self.pl.get_playing_entry()
+        pl_entry=self.pl_entry
         db=self.db
 
         items={
@@ -221,12 +225,30 @@ class microblogger(rb.Plugin):
         }
         
         for item in items:
-            text=text.replace('#'+item, '#'+str(items[item]).replace(' ', '_'))
+            # if has tag
+            tmp=str(items[item])
+            tmp=self._remove_forbidden_chars(tmp)
+            text=text.replace('#'+item, '#'+tmp)
 
-        for item in items:
+            # if hasn't tag
             text=text.replace(item, str(items[item]))
-            
+
         entry.set_text(text)
+
+    def _entry_key_press_event(self, entry, event):
+        if gtk.gdk.keyval_name(event.keyval)=='Escape':
+            self._cancel_clicked(None)
+
+    def _remove_forbidden_chars(self, text):
+        chars='!@#$%^&*()-+=\\|/[]{};:\'"<>,? '
+
+        for c in chars:
+            text=text.replace(c, '_')
+
+        for c in ('____', '___', '__'):
+            text=text.replace(c, '_')
+
+        return text.strip(chars+'_')
     
     def _entry_icon_press(self, entry, pos, event): 
         entry.set_text('')
@@ -237,8 +259,10 @@ class microblogger(rb.Plugin):
         try:
             link=urllib.urlopen('https://github.com/downloads/aliva/rhythmbox-microblogger/VERSION')
         except Exception as err:
+            print 'Coudn\'t get update info from rbmb'
             return      
         if link.code!=200:
+            print 'Coudn\'t get update info from rbmb'
             return
         
         f=link.read()
@@ -248,6 +272,7 @@ class microblogger(rb.Plugin):
         f=f.split('=')
         
         if f[0]!='version':
+            print 'Errors in update info file'
             return
         
         f=f[1]

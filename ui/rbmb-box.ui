@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
   <!-- interface-naming-policy toplevel-contextual -->
@@ -14,15 +14,16 @@
           <object class="GtkEntry" id="entry">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="invisible_char">●</property>
+            <property name="tooltip_text" translatable="yes">{title} {artist} {album} ...
+#{title} ...</property>
+            <property name="invisible_char">&#x25CF;</property>
             <property name="secondary_icon_stock">gtk-clear</property>
-            <signal name="changed" handler="_entry_changed" swapped="no"/>
-            <signal name="icon-press" handler="_entry_icon_press" swapped="no"/>
-            <signal name="activate" handler="_send_thread" swapped="no"/>
+            <signal name="changed" handler="_entry_changed"/>
+            <signal name="key_press_event" handler="_entry_key_press_event"/>
+            <signal name="icon_press" handler="_entry_icon_press"/>
+            <signal name="activate" handler="_send_thread"/>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
         </child>
@@ -42,8 +43,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="use_action_appearance">False</property>
-            <signal name="clicked" handler="_send_thread" swapped="no"/>
+            <signal name="clicked" handler="_send_thread"/>
             <child>
               <object class="GtkHBox" id="hbox2">
                 <property name="visible">True</property>
@@ -83,8 +83,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="use_action_appearance">False</property>
-            <signal name="clicked" handler="_cancel_clicked" swapped="no"/>
+            <signal name="clicked" handler="_cancel_clicked"/>
             <child>
               <object class="GtkImage" id="cancel-image">
                 <property name="visible">True</property>
@@ -100,8 +99,6 @@
         </child>
       </object>
       <packing>
-        <property name="expand">True</property>
-        <property name="fill">True</property>
         <property name="padding">5</property>
         <property name="position">0</property>
       </packing>

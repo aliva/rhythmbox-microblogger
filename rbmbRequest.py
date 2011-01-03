@@ -56,16 +56,8 @@ TWITTER={
 
 class AddAccountRequest():
     def __init__(self):
+        self.api=None
         self.type=None
-        
-        self.consumer=None
-        self.consumer_key=None
-        self.consumer_secret=None
-        self.request_token_url=None
-        self.access_token_url=None
-        self.authorization_url=None
-        self.callback_url=None
-        self.oauth=None
         
         self.request_token=None
         self.pin=None
@@ -73,11 +65,7 @@ class AddAccountRequest():
 
         
     def __del__(self):
-        del self.type
-        
-        del self.request_token
-        del self.pin
-        del self.alias
+        pass
 
         
     def request_set_type(self, t):
@@ -92,21 +80,15 @@ class AddAccountRequest():
             api=IDENTICA
         elif self.type=='twitter':
             api=TWITTER
-            
-        self.consumer_key     =decode(api['key'])
-        self.consumer_secret  =decode(api['secret'])
-        self.request_token_url=api['request_token']
-        self.access_token_url =api['access_token']
-        self.authorization_url=api['authorization'] 
-        self.callback_url     =api['call_back']
-        self.oauth            =api['oauth']
-        self.maxlen           =api['maxlen']
+
+        self.api=api            
         
-        self.consumer=oauth.Consumer(self.consumer_key, self.consumer_secret)
+        self.consumer=oauth.Consumer(decode(api['key']), decode(api['secret']))
         client=oauth.Client(self.consumer)
            
         try:     
-            resp, content = client.request(self.request_token_url, "GET", call_back=self.callback_url)
+            resp, content = client.request(api['request_token'], "GET",
+                                           call_back=api['call_back'])
         except Exception as err:
             set_hint('ERR: %s' % err)
             button.set_sensitive(True)
@@ -120,7 +102,7 @@ class AddAccountRequest():
         self.request_token=dict(urlparse.parse_qsl(content))
         
         
-        url = "%s?oauth_token=%s" % (self.authorization_url, self.request_token['oauth_token'])
+        url = "%s?oauth_token=%s" % (self.api['authorization'] , self.request_token['oauth_token'])
         set_hint('Opening:\n%s\nin your web browser' % url)
         webbrowser.open_new(url)
         
@@ -131,12 +113,13 @@ class AddAccountRequest():
         set_hint, button, assistant, page=args
         
         button.set_sensitive(False)
-        token=oauth.Token(self.request_token['oauth_token'],self.request_token['oauth_token_secret'])
+        token=oauth.Token(self.request_token['oauth_token'],
+                          self.request_token['oauth_token_secret'])
         token.set_verifier(self.pin)
         client = oauth.Client(self.consumer, token)
         
         try:
-            resp, content = client.request(self.access_token_url, "POST")
+            resp, content = client.request(self.api['access_token'], "POST")
         except Exception as err:
             set_hint('ERR: %s' % err)
             button.set_sensitive(True)
@@ -164,8 +147,8 @@ class AddAccountRequest():
                 token=encode(self.access_token),
                 token_secret=encode(self.access_token_secret),
                 url='',
-                oauth=self.oauth,
-                maxlen=self.maxlen)
+                oauth=self.api['oauth'],
+                maxlen=self.api['maxlen'])
 
 class Post:
     def __init__(self, mb):
@@ -182,12 +165,18 @@ class Post:
             api=IDENTICA
         
         get=ui.get_object
+        self.get=get
         
         w=get('general')
         w.set_sensitive(False)
         
         w=get('entry')
         text=w.get_text()
+
+        if len(text)==0:
+            self._get_out()
+            return
+
             
         params = {
             'oauth_consumer_key' : decode(api['key']),
@@ -222,7 +211,7 @@ class Post:
             w.set_text('Err: %s' % err)
             return
         finally:
-            self.mb.sending=False
+            self._get_out()
         
         notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
@@ -230,8 +219,11 @@ class Post:
         notif.show()
         
         w=get('general')
-        w.set_sensitive(True)
         w.hide_all()
+
+    def _get_out(self):
+        self.get('general').set_sensitive(True)
+        self.mb.sending=False
         
 
 def decode(string):
