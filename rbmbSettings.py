@@ -20,7 +20,7 @@
 
 __auther__ ='Ali Vakilzade'
 __name__   ='rhythmbox-microblogger'
-__version__='0.5.1'
+__version__='0.5.2'
 
 import base64
 import gconf
@@ -28,6 +28,7 @@ import gconf
 KEYS={
     'version'   :'/apps/rhythmbox/plugins/%s/version'    % __name__,
     'template'  :'/apps/rhythmbox/plugins/%s/template'   % __name__,
+    'progress'  :'/apps/rhythmbox/plugins/%s/progress'   % __name__,
     'a_list'    :'/apps/rhythmbox/plugins/%s/accounts'   % __name__,
     'a'         :'/apps/rhythmbox/plugins/%s/account/'   % __name__,
 }
@@ -35,6 +36,7 @@ KEYS={
 DEFAULT={
     'template'  :'[Rhythmbox] {title} by #{artist} from {album}',
     'a_list'    :[],
+    'progress'  :True,
 }
 
 class Settings:
@@ -55,17 +57,23 @@ class Settings:
             return None
         
         ver=client.get_string(KEYS['version'])
+
         if ver=='0.5.0':
             client.set_string(KEYS['template'], DEFAULT['template'])
+
+        if ver in ('0.5.0', '0.5.1'):
+            client.set_bool(KEYS['progress'], DEFAULT['progress'])
 
         ver=ver.split('.')
         if int(ver[1])<5:
             self._remove_conf(None)
             return None
+
         
         client.set_string(KEYS['version'], __version__)
         
         conf['template']  =client.get_string(KEYS['template'])
+        conf['progress']  =client.get_bool  (KEYS['progress'])
         conf['a_list']    =client.get_list  (KEYS['a_list'], gconf.VALUE_STRING)
         
         conf['a']={}
@@ -93,11 +101,18 @@ class Settings:
             client.set_string(KEYS['template'], text)
         self.conf['template']  =client.get_string(KEYS['template'])
         
+    def update_conf(self, text, val):
+        client=gconf.client_get_default()
+        if text=='progress':
+            client.set_bool(KEYS['progress'], val)
+            self.conf['progress']=val
+
     def _create_conf(self):
         client=gconf.client_get_default()
         
         client.set_string(KEYS['version'], __version__)
         client.set_string(KEYS['template'], DEFAULT['template'])
+        client.set_bool(KEYS['progress'], DEFAULT['progress'])
         client.set_list(KEYS['a_list'], gconf.VALUE_STRING, DEFAULT['a_list'])
 
         return DEFAULT

@@ -205,7 +205,8 @@ class microblogger(rb.Plugin):
         label=self.boxui.get_object('len')
         label.set_text('%d' % (maxlen-len))
         
-        entry.set_progress_fraction(float(len)/maxlen)
+        if self.settings.conf['progress']:
+            entry.set_progress_fraction(float(len)/maxlen)
         
         send=self.boxui.get_object('send')
         send.set_sensitive(0<len<=maxlen)

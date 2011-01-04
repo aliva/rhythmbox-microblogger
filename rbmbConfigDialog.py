@@ -53,6 +53,7 @@ class ConfigDialog:
         tabs={
              'General' :'ui/rbmb-tab-general.ui',
              'Accounts':'ui/rbmb-tab-accounts.ui',
+             'Proxy'   :'ui/rbmb-tab-proxy.ui',
         }
         
         # create a list store for all accounts
@@ -79,6 +80,9 @@ class ConfigDialog:
             elif key=='General':
                 self.entry_template=tabui.get_object('template')
                 self.entry_template.set_text(self.mb.settings.conf['template'])
+
+                self.progress_bar=tabui.get_object('progress')
+                self.progress_bar.set_active(self.mb.settings.conf['progress'])
         
         # show it        
         self.dialog.show_all()
@@ -89,6 +93,7 @@ class ConfigDialog:
         self.mb.add_ui()
         
         self.mb.settings.update_template(self.entry_template.get_text())
+        self.mb.settings.update_conf('progress', self.progress_bar.get_active())
         
         dialog.destroy()
         
