@@ -53,7 +53,7 @@ class ConfigDialog:
         tabs={
              'General' :'ui/rbmb-tab-general.ui',
              'Accounts':'ui/rbmb-tab-accounts.ui',
-             'Proxy'   :'ui/rbmb-tab-proxy.ui',
+             #'Proxy'   :'ui/rbmb-tab-proxy.ui',
         }
         
         # create a list store for all accounts
@@ -79,10 +79,10 @@ class ConfigDialog:
                 self.view=view
             elif key=='General':
                 self.entry_template=tabui.get_object('template')
-                self.entry_template.set_text(self.mb.settings.conf['template'])
+                self.entry_template.set_text(self.mb.get_conf('template'))
 
                 self.progress_bar=tabui.get_object('progress')
-                self.progress_bar.set_active(self.mb.settings.conf['progress'])
+                self.progress_bar.set_active(self.mb.get_conf('progress'))
         
         # show it        
         self.dialog.show_all()
@@ -92,7 +92,7 @@ class ConfigDialog:
         self.mb.remove_ui()     
         self.mb.add_ui()
         
-        self.mb.settings.update_template(self.entry_template.get_text())
+        self.mb.settings.update_conf('template', self.entry_template.get_text())
         self.mb.settings.update_conf('progress', self.progress_bar.get_active())
         
         dialog.destroy()
@@ -114,9 +114,9 @@ class ConfigDialog:
     def update_list_store(self):
         self.lstore.clear()
         
-        for alias in self.mb.settings.conf['a_list']:
+        for alias in self.mb.get_conf('a_list'):
             iter = self.lstore.append()
-            a=self.mb.settings.conf['a'][alias]
+            a=self.mb.get_conf('a', alias)
             self.lstore.set(iter,
                             0, a['alias'],
                             1, a['type'],

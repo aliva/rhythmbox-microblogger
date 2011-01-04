@@ -93,27 +93,26 @@ class Settings:
         
         return conf
     
-    def update_template(self, text):
-        client=gconf.client_get_default()
-        if len(text)==0:
-            client.set_string(KEYS['template'], DEFAULT['template'])
-        else:
-            client.set_string(KEYS['template'], text)
-        self.conf['template']  =client.get_string(KEYS['template'])
-        
     def update_conf(self, text, val):
         client=gconf.client_get_default()
+
         if text=='progress':
             client.set_bool(KEYS['progress'], val)
             self.conf['progress']=val
+        elif text=='template':
+            if len(val)==0:
+                client.set_string(KEYS['template'], DEFAULT['template'])
+            else:
+                client.set_string(KEYS['template'], val)
+            self.conf['template']  =client.get_string(KEYS['template'])
 
     def _create_conf(self):
         client=gconf.client_get_default()
         
         client.set_string(KEYS['version'], __version__)
         client.set_string(KEYS['template'], DEFAULT['template'])
-        client.set_bool(KEYS['progress'], DEFAULT['progress'])
-        client.set_list(KEYS['a_list'], gconf.VALUE_STRING, DEFAULT['a_list'])
+        client.set_bool  (KEYS['progress'], DEFAULT['progress'])
+        client.set_list  (KEYS['a_list'], gconf.VALUE_STRING, DEFAULT['a_list'])
 
         return DEFAULT
     
