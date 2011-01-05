@@ -101,7 +101,8 @@ class AddAccountRequest():
         
         
         url = "%s?oauth_token=%s" % (self.api['authorization'] , self.request_token['oauth_token'])
-        set_hint('Opening:\n%s\nin your web browser' % url)
+        set_hint('Opening your web browser')
+        print url
         webbrowser.open_new(url)
         
         page[4]=True

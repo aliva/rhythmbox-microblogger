@@ -211,17 +211,20 @@ class microblogger(rb.Plugin):
         
         text=entry.get_text()
         pl_entry=self.pl_entry
-        db=self.db
+        if pl_entry==None:
+            return
 
+        get=self.db.entry_get
         items={
-            '{title}' :db.entry_get(pl_entry, rhythmdb.PROP_TITLE),
-            '{genre}' :db.entry_get(pl_entry, rhythmdb.PROP_GENRE),
-            '{artist}':db.entry_get(pl_entry, rhythmdb.PROP_ARTIST),
-            '{album}' :db.entry_get(pl_entry, rhythmdb.PROP_ALBUM),
-            '{rate}'  :db.entry_get(pl_entry, rhythmdb.PROP_RATING),
-            '{year}'  :db.entry_get(pl_entry, rhythmdb.PROP_YEAR),
-            '{pcount}':db.entry_get(pl_entry, rhythmdb.PROP_PLAY_COUNT),
+            '{title}' :get(pl_entry, rhythmdb.PROP_TITLE),
+            '{genre}' :get(pl_entry, rhythmdb.PROP_GENRE),
+            '{artist}':get(pl_entry, rhythmdb.PROP_ARTIST),
+            '{album}' :get(pl_entry, rhythmdb.PROP_ALBUM),
+            '{rate}'  :get(pl_entry, rhythmdb.PROP_RATING),
+            '{year}'  :get(pl_entry, rhythmdb.PROP_YEAR),
+            '{pcount}':get(pl_entry, rhythmdb.PROP_PLAY_COUNT),
         }
+        del get
         
         for item in items:
             # if has tag
