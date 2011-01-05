@@ -26,17 +26,23 @@ import base64
 import gconf
 
 KEYS={
-    'version'   :'/apps/rhythmbox/plugins/%s/version'    % __name__,
-    'template'  :'/apps/rhythmbox/plugins/%s/template'   % __name__,
-    'progress'  :'/apps/rhythmbox/plugins/%s/progress'   % __name__,
-    'a_list'    :'/apps/rhythmbox/plugins/%s/accounts'   % __name__,
-    'a'         :'/apps/rhythmbox/plugins/%s/account/'   % __name__,
+    'version'     :'/apps/rhythmbox/plugins/%s/version'      % __name__,
+    'template'    :'/apps/rhythmbox/plugins/%s/template'     % __name__,
+    'progress'    :'/apps/rhythmbox/plugins/%s/progress'     % __name__,
+    'a_list'      :'/apps/rhythmbox/plugins/%s/accounts'     % __name__,
+    'a'           :'/apps/rhythmbox/plugins/%s/account/'     % __name__,
+    'proxy'       :'/apps/rhythmbox/plugins/%s/proxy'        % __name__,
+    'proxy_server':'/apps/rhythmbox/plugins/%s/proxy_server' % __name__,
+    'proxy_port'  :'/apps/rhythmbox/plugins/%s/proxy_port'   % __name__,
 }
 
 DEFAULT={
-    'template'  :'[Rhythmbox] {title} by #{artist} from {album}',
-    'a_list'    :[],
-    'progress'  :True,
+    'template'    :'[Rhythmbox] {title} by #{artist} from #{album}',
+    'a_list'      :[],
+    'progress'    :True,
+    'proxy'       :'none',
+    'proxy_server':'127.0.0.1',
+    'proxy_port'  :'8080',
 }
 
 class Settings:
@@ -58,16 +64,18 @@ class Settings:
         
         ver=client.get_string(KEYS['version'])
 
-        if ver=='0.5.0':
-            client.set_string(KEYS['template'], DEFAULT['template'])
-
-        if ver in ('0.5.0', '0.5.1'):
-            client.set_bool(KEYS['progress'], DEFAULT['progress'])
-
         ver=ver.split('.')
-        if int(ver[1])<5:
+        ver[0], ver[1], ver[2]=int(ver[0]), int(ver[1]), int(ver[2])
+        if ver[1]<5:
             self._remove_conf(None)
             return None
+
+        if ver[0]==0:
+            if ver[1]==5:
+                if ver[2]==0:
+                    client.set_string(KEYS['template'], DEFAULT['template'])
+                if ver[2]<=1:
+                    client.set_bool(KEYS['progress'], DEFAULT['progress'])
 
         
         client.set_string(KEYS['version'], __version__)
@@ -88,7 +96,6 @@ class Settings:
             conf['a'][alias]['token_key']=client.get_string(ad + 'token_key')
             conf['a'][alias]['token_secret']=client.get_string(ad + 'token_secret')
             conf['a'][alias]['url']=client.get_string(ad + 'url')
-            conf['a'][alias]['oauth']=client.get_bool(ad + 'oauth')
             conf['a'][alias]['maxlen']=client.get_int(ad + 'maxlen')
         
         return conf
@@ -144,7 +151,6 @@ class Settings:
                     token,
                     token_secret,
                     url,
-                    oauth,
                     maxlen):
         
         self._conf['a_list'].append(alias)
@@ -157,7 +163,6 @@ class Settings:
         client.set_string(ad + 'token_key'   , token)
         client.set_string(ad + 'token_secret', token_secret)
         client.set_string(ad + 'url'         , url)
-        client.set_bool  (ad + 'oauth'       , oauth)
         client.set_int   (ad + 'maxlen'      , maxlen)
         client.set_list  (KEYS['a_list'], gconf.VALUE_STRING, self._conf['a_list'])
         
@@ -167,4 +172,13 @@ class Settings:
         # a means account
         if key=='a':
             return self._conf['a'][alias]
+        elif key=='proxy':
+            return self._get_proxy_configs()
         return self._conf[key]
+
+    def _get_proxy_configs(self):
+        try:
+            import socks
+            return None
+        except ImportError:
+            return None

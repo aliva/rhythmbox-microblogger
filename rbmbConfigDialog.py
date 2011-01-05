@@ -107,7 +107,6 @@ class ConfigDialog:
         self.lstore=gtk.ListStore(
             gobject.TYPE_STRING,  # alias
             gobject.TYPE_STRING,  # type
-            gobject.TYPE_BOOLEAN, # oauth
             gobject.TYPE_STRING,  # service url
         )
     
@@ -120,8 +119,7 @@ class ConfigDialog:
             self.lstore.set(iter,
                             0, a['alias'],
                             1, a['type'],
-                            2, a['oauth'],
-                            3, a['url'])
+                            2, a['url'])
             
     def _add_columns(self, treeview):
         model=treeview.get_model()
@@ -136,14 +134,9 @@ class ConfigDialog:
         column=gtk.TreeViewColumn('Type', renderer, text=1)
         treeview.append_column(column)
         
-        # column for oauth
-        renderer=gtk.CellRendererToggle()
-        column=gtk.TreeViewColumn('oauth', renderer, active=2)
-        treeview.append_column(column)
-        
         # column for service url
         renderer=gtk.CellRendererText()
-        column=gtk.TreeViewColumn('Service', renderer, text=3)
+        column=gtk.TreeViewColumn('Service', renderer, text=2)
         treeview.append_column(column)
         
     def _add_button_clicked(self, button):

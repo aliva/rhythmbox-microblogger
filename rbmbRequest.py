@@ -38,7 +38,6 @@ IDENTICA={
     'authorization':'https://identi.ca/api/oauth/authorize',
     'post':'https://identi.ca/api/statuses/update.json',
     'call_back':'oob',
-    'oauth':True,
     'maxlen':140,
 }
 
@@ -50,7 +49,6 @@ TWITTER={
     'authorization':'https://twitter.com/oauth/authorize',
     'post': 'https://twitter.com/statuses/update.json',
     'call_back':None,
-    'oauth':True,
     'maxlen':140,
 }
 
@@ -147,7 +145,6 @@ class AddAccountRequest():
                 token=encode(self.access_token),
                 token_secret=encode(self.access_token_secret),
                 url='',
-                oauth=self.api['oauth'],
                 maxlen=self.api['maxlen'])
 
 class Post:
