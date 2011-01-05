@@ -197,7 +197,7 @@ class AddDialog(AddAccountRequest):
         
         page=self.pages[5]
         
-        if self.alias in self.mb.settings.conf['a_list']:
+        if self.alias in self.mb.get_conf('a_list'):
             page[4]=False
             self.assistant.set_page_complete(page[0], page[4])
             self._set_hint('Use another alias\n%s is not unique' % self.alias)

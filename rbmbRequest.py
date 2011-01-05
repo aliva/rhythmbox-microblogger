@@ -157,7 +157,7 @@ class Post:
     def post(self, *args):
         ui, alias=args
         
-        conf=self.mb.settings.conf['a'][alias]
+        conf=self.mb.get_conf('a', alias)
         
         if conf['type']=='twitter':
             api=TWITTER

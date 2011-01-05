@@ -62,6 +62,8 @@ class microblogger(rb.Plugin):
         self.settings=Settings()
         self.post=Post(self)
         
+        self.get_conf=self.settings.get_conf
+
         self.uim = shell.get_ui_manager()
                         
         self._register_icons()
@@ -103,13 +105,11 @@ class microblogger(rb.Plugin):
         self.ui_id=[]
         self.action_groups=[]
 
-        conf=self.settings.conf
-
-        for alias in conf['a_list']:
+        for alias in self.get_conf('a_list'):
             action=gtk.Action('rbmb-action-%s' % alias,
                               alias,
                               'Microblogger plugin',
-                              'rbmb-%s' % conf['a'][alias]['type'])
+                              'rbmb-%s' % self.get_conf('a', alias)['type'])
             activate_id = action.connect('activate', self._send_clicked, alias)
             action_group = gtk.ActionGroup('rbmb-actiongroup-%s'% alias)
             action_group.add_action(action)
@@ -161,7 +161,7 @@ class microblogger(rb.Plugin):
         
         get=self.boxui.get_object
         
-        conf=self.settings.conf['a'][alias]
+        conf=self.get_conf('a', alias)
         
         self.pl_entry=self.pl.get_playing_entry()
 
@@ -176,7 +176,7 @@ class microblogger(rb.Plugin):
         
         w=get('entry')
         w.set_progress_fraction(0)
-        w.set_text(self.settings.conf['template'])
+        w.set_text(self.get_conf('template'))
         w.grab_focus()
         
         w=get('send')
@@ -196,16 +196,14 @@ class microblogger(rb.Plugin):
         box.hide_all()
         
     def _entry_changed(self, entry):
-        maxlen=self.settings.conf['a'][self.alias]['maxlen']
-        if maxlen==0:
-            maxlen=140
+        maxlen=140
         
         len=entry.get_text_length()
         
         label=self.boxui.get_object('len')
         label.set_text('%d' % (maxlen-len))
         
-        if self.settings.conf['progress']:
+        if self.get_conf('progress'):
             entry.set_progress_fraction(float(len)/maxlen)
         
         send=self.boxui.get_object('send')

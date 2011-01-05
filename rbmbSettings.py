@@ -42,12 +42,12 @@ DEFAULT={
 class Settings:
     def __init__(self):
         #self._remove_conf(None)
-        self.conf=self._read_conf()
-        if self.conf is None:
-            self.conf=self._create_conf()
+        self._conf=self._read_conf()
+        if self._conf is None:
+            self._conf=self._create_conf()
         
     def __del__(self):
-        del self.conf
+        del self._conf
         
     def _read_conf(self):
         conf={}
@@ -98,13 +98,13 @@ class Settings:
 
         if text=='progress':
             client.set_bool(KEYS['progress'], val)
-            self.conf['progress']=val
+            self._conf['progress']=val
         elif text=='template':
             if len(val)==0:
                 client.set_string(KEYS['template'], DEFAULT['template'])
             else:
                 client.set_string(KEYS['template'], val)
-            self.conf['template']  =client.get_string(KEYS['template'])
+            self._conf['template']  =client.get_string(KEYS['template'])
 
     def _create_conf(self):
         client=gconf.client_get_default()
@@ -117,13 +117,13 @@ class Settings:
         return DEFAULT
     
     def remove_account(self, alias):
-        self.conf['a_list'].remove(alias)
-        del self.conf['a'][alias]
+        self._conf['a_list'].remove(alias)
+        del self._conf['a'][alias]
 
         self._remove_conf(alias)
 
         client=gconf.client_get_default()
-        client.set_list(KEYS['a_list'], gconf.VALUE_STRING, self.conf['a_list'])
+        client.set_list(KEYS['a_list'], gconf.VALUE_STRING, self._conf['a_list'])
             
     def _remove_conf(self, key):
         client=gconf.client_get_default()
@@ -147,7 +147,7 @@ class Settings:
                     oauth,
                     maxlen):
         
-        self.conf['a_list'].append(alias)
+        self._conf['a_list'].append(alias)
         
         ad=KEYS['a']+alias+'/'
         
@@ -159,6 +159,12 @@ class Settings:
         client.set_string(ad + 'url'         , url)
         client.set_bool  (ad + 'oauth'       , oauth)
         client.set_int   (ad + 'maxlen'      , maxlen)
-        client.set_list  (KEYS['a_list'], gconf.VALUE_STRING, self.conf['a_list'])
+        client.set_list  (KEYS['a_list'], gconf.VALUE_STRING, self._conf['a_list'])
         
         self.__init__()
+
+    def get_conf(self, key, alias=0):
+        # a means account
+        if key=='a':
+            return self._conf['a'][alias]
+        return self._conf[key]
