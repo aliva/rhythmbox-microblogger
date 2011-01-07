@@ -24,6 +24,7 @@ __version__='0.5.2'
 
 import base64
 import gconf
+import httplib2
 
 KEYS={
     'version'     :'/apps/rhythmbox/plugins/%s/version'      % __name__,
@@ -42,7 +43,7 @@ DEFAULT={
     'progress'    :True,
     'proxy'       :'none',
     'proxy_server':'127.0.0.1',
-    'proxy_port'  :'8080',
+    'proxy_port'  :8080,
 }
 
 class Settings:
@@ -76,13 +77,19 @@ class Settings:
                     client.set_string(KEYS['template'], DEFAULT['template'])
                 if ver[2]<=1:
                     client.set_bool(KEYS['progress'], DEFAULT['progress'])
+                    client.set_string(KEYS['proxy'], DEFAULT['proxy'])
+                    client.set_string(KEYS['proxy_server'], DEFAULT['proxy_server'])
+                    client.set_int(KEYS['proxy_port'], DEFAULT['proxy_port'])
 
         
         client.set_string(KEYS['version'], __version__)
         
-        conf['template']  =client.get_string(KEYS['template'])
-        conf['progress']  =client.get_bool  (KEYS['progress'])
-        conf['a_list']    =client.get_list  (KEYS['a_list'], gconf.VALUE_STRING)
+        conf['template']    =client.get_string(KEYS['template'])
+        conf['proxy']       =client.get_string(KEYS['proxy'])
+        conf['proxy_server']=client.get_string(KEYS['proxy_server'])
+        conf['progress']    =client.get_bool  (KEYS['progress'])
+        conf['proxy_port']  =client.get_int(KEYS['proxy_port'])
+        conf['a_list']      =client.get_list  (KEYS['a_list'], gconf.VALUE_STRING)
         
         conf['a']={}
         
@@ -105,13 +112,15 @@ class Settings:
 
         if text=='progress':
             client.set_bool(KEYS['progress'], val)
-            self._conf['progress']=val
+        elif text in ('proxy', 'proxy_server'):
+            client.set_string(KEYS[text], val)
+        elif text=='proxy_port':
+            client.set_int(KEYS[text], val)
         elif text=='template':
             if len(val)==0:
-                client.set_string(KEYS['template'], DEFAULT['template'])
-            else:
-                client.set_string(KEYS['template'], val)
-            self._conf['template']  =client.get_string(KEYS['template'])
+                val=DEFAULT['template']
+            client.set_string(KEYS['template'], val)
+        self._conf[text]=val
 
     def _create_conf(self):
         client=gconf.client_get_default()
@@ -168,17 +177,30 @@ class Settings:
         
         self.__init__()
 
-    def get_conf(self, key, alias=0):
+    def get_conf(self, key, alias='object'):
         # a means account
         if key=='a':
             return self._conf['a'][alias]
-        elif key=='proxy':
+        elif key=='proxy' and alias=='object':
             return self._get_proxy_configs()
         return self._conf[key]
 
     def _get_proxy_configs(self):
         try:
             import socks
+            proxy=self._conf['proxy']
+            if proxy=='none':
+                return None
+            if proxy=='socks5':
+                socks=socks.PROXY_TYPE_SOCKS5
+            elif proxy=='socks4':
+                socks=socks.PROXY_TYPE_SOCKS4
+            else:
+                socks=socks.PROXY_TYPE_HTTP
+
+            return httplib2.ProxyInfo(proxy_type=socks,
+                                      proxy_host=self._conf['proxy_server'],
+                                      proxy_port=self._conf['proxy_port'])
             return None
         except ImportError:
             return None

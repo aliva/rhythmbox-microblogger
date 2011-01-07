@@ -53,7 +53,7 @@ class ConfigDialog:
         tabs={
              'General' :'ui/rbmb-tab-general.ui',
              'Accounts':'ui/rbmb-tab-accounts.ui',
-             #'Proxy'   :'ui/rbmb-tab-proxy.ui',
+             'Proxy'   :'ui/rbmb-tab-proxy.ui',
         }
         
         # create a list store for all accounts
@@ -83,17 +83,66 @@ class ConfigDialog:
 
                 self.progress_bar=tabui.get_object('progress')
                 self.progress_bar.set_active(self.mb.get_conf('progress'))
+            elif key=='Proxy':
+                try:
+                    import socks
+
+                    frame=tabui.get_object('manual-frame')
+                    tabui.get_object('noproxy').connect('toggled', self._proxy_radio_changed, frame, False)
+                    tabui.get_object('env'    ).connect('toggled', self._proxy_radio_changed, frame, False)
+                    tabui.get_object('manual' ).connect('toggled', self._proxy_radio_changed, frame, True )
+
+                    proxy=self.mb.get_conf('proxy', 0)
+                    if proxy=='none':
+                        tabui.get_object('noproxy').set_active(True)
+                        frame.set_sensitive(False)
+                    elif proxy=='env':
+                        tabui.get_object('env').set_active(True)
+                        frame.set_sensitive(False)
+                    else:
+                        tabui.get_object('manual').set_active(True)
+                        tabui.get_object(proxy).set_active(True)
+                        frame.set_sensitive(True)
+                    tabui.get_object('proxy_server').set_text(self.mb.get_conf('proxy_server', 0))
+                    tabui.get_object('proxy_port').set_value (self.mb.get_conf('proxy_port'  , 0))
+
+                    self.proxy_widgets=tabui
+                except ImportError:
+                    for w in ('noproxy', 'env', 'manual', 'manual-frame'):
+                        tabui.get_object(w).set_sensitive(False)
+                    self.proxy_widgets=None
+                    tabui.get_object('hint').set_text(
+'install python socks module from package manger\nor Source forge to active this page\nSF link: http://sourceforge.net/projects/socksipy/')
         
+                    tabui.get_object('hint').set_sensitive(True)
         # show it        
         self.dialog.show_all()
         return self.dialog
+
+    def _proxy_radio_changed(self, radio, frame, active):
+            frame.set_sensitive(active)
         
     def _main_dialog_response(self, dialog, id):
         self.mb.remove_ui()     
         self.mb.add_ui()
-        
-        self.mb.settings.update_conf('template', self.entry_template.get_text())
-        self.mb.settings.update_conf('progress', self.progress_bar.get_active())
+
+        uc=self.mb.settings.update_conf
+
+        uc('template', self.entry_template.get_text())
+        uc('progress', self.progress_bar.get_active())
+
+        if self.proxy_widgets!=None:
+            w=self.proxy_widgets
+            for i in ('http', 'socks4', 'socks5'):
+                if w.get_object(i).get_active():
+                    proxy=i
+            if w.get_object('noproxy').get_active():
+                proxy='none'
+            if w.get_object('env').get_active():
+                proxy='env'
+            uc('proxy'       , proxy)
+            uc('proxy_server', w.get_object('proxy_server').get_text())
+            uc('proxy_port'  , int(w.get_object('proxy_port'  ).get_value()))
         
         dialog.destroy()
         

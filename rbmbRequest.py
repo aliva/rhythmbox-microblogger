@@ -70,7 +70,7 @@ class AddAccountRequest():
         self.type=t
         
     def authorize(self, *args):
-        set_hint, button, assistant, page=args
+        set_hint, button, assistant, page, proxy_info=args
         
         button.set_sensitive(False)
            
@@ -82,7 +82,7 @@ class AddAccountRequest():
         self.api=api            
         
         self.consumer=oauth.Consumer(decode(api['key']), decode(api['secret']))
-        client=oauth.Client(self.consumer)
+        client=oauth.Client(self.consumer, proxy_info=proxy_info)
            
         try:     
             resp, content = client.request(api['request_token'], "GET",
@@ -109,13 +109,13 @@ class AddAccountRequest():
         assistant.set_page_complete(page[0], page[4])
 
     def exchange(self, *args):
-        set_hint, button, assistant, page=args
+        set_hint, button, assistant, page, proxy_info=args
         
         button.set_sensitive(False)
         token=oauth.Token(self.request_token['oauth_token'],
                           self.request_token['oauth_token_secret'])
         token.set_verifier(self.pin)
-        client = oauth.Client(self.consumer, token)
+        client = oauth.Client(self.consumer, token, proxy_info=proxy_info)
         
         try:
             resp, content = client.request(self.api['access_token'], "POST")
@@ -205,7 +205,7 @@ class Post:
         try:
             res = urllib2.urlopen(req)
         except Exception as err:
-            w=get('type')
+            w=get('alias')
             w.set_text('Err: %s' % err)
             return
         finally:

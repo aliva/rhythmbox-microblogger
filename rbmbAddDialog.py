@@ -172,14 +172,18 @@ class AddDialog(AddAccountRequest):
                     
         self._set_hint('')
         
-        threading.Thread(target=self.authorize, args=(self._set_hint, button, self.assistant, page)).start()
+        threading.Thread(target=self.authorize,
+                args=(self._set_hint, button, self.assistant, page, self.mb.get_conf('proxy'))
+                ).start()
         
     def _exchange_clicked(self, button):
         page=self.pages[3]        
         
         self._set_hint('')
         
-        threading.Thread(target=self.exchange, args=(self._set_hint, button, self.assistant, page)).start()
+        threading.Thread(target=self.exchange,
+                args=(self._set_hint, button, self.assistant, page, self.mb.get_conf('proxy'))
+                ).start()
         
     def _pin_entry_changed(self, entry):
         len=entry.get_text_length()
