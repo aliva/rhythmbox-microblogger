@@ -53,8 +53,8 @@ TWITTER={
 }
 
 GETGLUE={
-    'key'   :'NDczODhhMTA2NWI1MjRiMjIzMzYwY2UxOTRlM2U1Y2U=',
-    'secret':'YmJmZThkNGU2YTVhNTE5ZTUzM2JkZmUxNTk3ODQ0OGM=',
+    'key'   :'',
+    'secret':'',
     'request_token':'http://api.getglue.com/oauth/request_token',
     'access_token' :'http://api.getglue.com/oauth/access_token',
     'authorization':'http://getglue.com/oauth/authorize',
