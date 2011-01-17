@@ -1,5 +1,5 @@
-#! /usr/bin/python2
-# -*- coding: utf8 -*-
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Rhythmbox-Microblogger - <http://github.com/aliva/Rhythmbox-Microblogger>
 # Copyright (C) 2010 Ali Vakilzade <ali.vakilzade in Gmail>
@@ -52,6 +52,16 @@ TWITTER={
     'maxlen':140,
 }
 
+GETGLUE={
+    'key'   :'NDczODhhMTA2NWI1MjRiMjIzMzYwY2UxOTRlM2U1Y2U=',
+    'secret':'YmJmZThkNGU2YTVhNTE5ZTUzM2JkZmUxNTk3ODQ0OGM=',
+    'request_token':'http://api.getglue.com/oauth/request_token',
+    'access_token' :'http://api.getglue.com/oauth/access_token',
+    'authorization':'http://getglue.com/oauth/authorize',
+    'post': 'http://api.getglue.com/v2/user/addCheckin?',
+    'call_back':None,
+    'maxlen':300,
+}
 class AddAccountRequest():
     def __init__(self):
         self.api=None
@@ -78,6 +88,8 @@ class AddAccountRequest():
             api=IDENTICA
         elif self.type=='twitter':
             api=TWITTER
+        elif self.type=='getglue':
+            api=GETGLUE
 
         self.api=api            
         
@@ -153,7 +165,7 @@ class Post:
         self.mb=mb
         
     def post(self, *args):
-        ui, alias=args
+        ui, self.artist, self.title, self.album, alias=args
         
         conf=self.mb.get_conf('a', alias)
         
@@ -161,6 +173,8 @@ class Post:
             api=TWITTER
         elif conf['type']=='identica':
             api=IDENTICA
+        elif conf['type']=='getglue':
+            api=GETGLUE
         
         get=ui.get_object
         self.get=get
@@ -184,33 +198,40 @@ class Post:
             'oauth_version' : '1.0',
             'oauth_token' : decode(conf['token_key']),
             }
-        
-        params['status'] = urllib.quote(text, '')
-        params['oauth_signature'] = hmac.new(
-            '%s&%s' % (decode(api['secret']), decode(conf['token_secret'])),
-            '&'.join([
-                'POST',
-                urllib.quote(api['post'], ''),
-                urllib.quote('&'.join(['%s=%s' % (x, params[x])
-                                       for x in sorted(params)]), '')
-                ]),
-            hashlib.sha1).digest().encode('base64').strip()
-        del params['status']
-
-        # post with oauth token
-        req = urllib2.Request(api['post'], data = urllib.urlencode(params))
-        req.add_data(urllib.urlencode({'status' : text}))
-        req.add_header('Authorization', 'OAuth %s' % ', '.join(
-            ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
-        try:
-            res = urllib2.urlopen(req)
-        except Exception as err:
-            w=get('alias')
-            w.set_text('Err: %s' % err)
-            return
-        finally:
+        if api == GETGLUE:
+            consumer = oauth.Consumer(decode(api['key']), decode(api['secret']))
+            token = oauth.Token(decode(conf['token_key']), decode(conf['token_secret']))
+            client = oauth.Client(consumer, token)
+            link = api['post']+urllib.urlencode({'app' : "Rhythmbox Microblogging"})+"&"+urllib.urlencode({'source' : "http://www.rhythmbox.org"})+"&"+urllib.urlencode({'objectId' : 'recording_artists/'+self.artist.lower().replace(' ', '_')})+"&"+urllib.urlencode({'comment' : self.title+" from "+self.album})
+            resp, content = client.request(link, 'GET')
             self._get_out()
-        
+        else:
+            params['status'] = urllib.quote(text, '')
+            params['oauth_signature'] = hmac.new(
+                '%s&%s' % (decode(api['secret']), decode(conf['token_secret'])),
+                '&'.join([
+                    'POST',
+                    urllib.quote(api['post'], ''),
+                    urllib.quote('&'.join(['%s=%s' % (x, params[x])
+                                           for x in sorted(params)]), '')
+                    ]),
+                hashlib.sha1).digest().encode('base64').strip()
+            del params['status']
+
+            # post with oauth token
+            req = urllib2.Request(api['post'], data = urllib.urlencode(params))
+            req.add_data(urllib.urlencode({'status' : text}))
+            req.add_header('Authorization', 'OAuth %s' % ', '.join(
+                ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
+            try:
+                res = urllib2.urlopen(req)
+            except Exception as err:
+                w=get('alias')
+                w.set_text('Err: %s' % err)
+                return
+            finally:
+                self._get_out()
+       
         notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
                                     self.mb.find_file('icon/%s.png' % conf['type']))

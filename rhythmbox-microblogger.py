@@ -1,5 +1,5 @@
-#! /usr/bin/python2
-# -*- coding: utf8 -*-
+#! /usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Rhythmbox-Microblogger - <http://github.com/aliva/Rhythmbox-Microblogger>
 # Copyright (C) 2010 Ali Vakilzade <ali.vakilzade in Gmail>
@@ -45,7 +45,7 @@ UI_TOOLBAR='''
 '''
 
 class microblogger(rb.Plugin):
-    ACCOUNT_TYPE=('twitter', 'identica')
+    ACCOUNT_TYPE=('twitter', 'identica', 'getglue')
     def __init__(self):
         rb.Plugin.__init__(self)
 
@@ -186,8 +186,8 @@ class microblogger(rb.Plugin):
         
     def _send_thread(self, button):
         self.sending=True
-        
-        threading.Thread(target=self.post.post, args=(self.boxui, self.alias)).start()
+
+        threading.Thread(target=self.post.post, args=(self.boxui, self.artist, self.title, self.album, self.alias)).start()
         
     def _cancel_clicked(self, button):
         self.sending=False
@@ -224,6 +224,9 @@ class microblogger(rb.Plugin):
             '{year}'  :get(pl_entry, rhythmdb.PROP_YEAR),
             '{pcount}':get(pl_entry, rhythmdb.PROP_PLAY_COUNT),
         }
+        self.artist = get(pl_entry, rhythmdb.PROP_ARTIST)
+        self.title = get(pl_entry, rhythmdb.PROP_TITLE)
+        self.album = get(pl_entry, rhythmdb.PROP_ALBUM)
         del get
         
         for item in items:
