@@ -1,5 +1,5 @@
-#! /usr/bin/python
-# -*- coding: utf-8 -*-
+#! /usr/bin/python2
+# -*- coding: utf8 -*-
 #
 # Rhythmbox-Microblogger - <http://github.com/aliva/Rhythmbox-Microblogger>
 # Copyright (C) 2010 Ali Vakilzade <ali.vakilzade in Gmail>
@@ -176,18 +176,29 @@ class microblogger(rb.Plugin):
         
         w=get('entry')
         w.set_progress_fraction(0)
+        w.set_sensitive(True)
         w.set_text(self.get_conf('template'))
         w.grab_focus()
         
         w=get('send')
         w.set_sensitive(True)
-        
+
         box.show_all()
+
+        if conf['type']=='getglue':
+            w=get('entry')
+            w.set_sensitive(False)
+            w.set_text('   ')
+            self._send_thread(None)
         
     def _send_thread(self, button):
         self.sending=True
-
-        threading.Thread(target=self.post.post, args=(self.boxui, self.artist, self.title, self.album, self.alias)).start()
+        
+        threading.Thread(target=self.post.post,
+                         args=(self.boxui,
+                               self.artist, self.title, self.album,
+                               self.alias, self.get_conf('proxy'))
+                         ).start()
         
     def _cancel_clicked(self, button):
         self.sending=False

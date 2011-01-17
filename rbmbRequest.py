@@ -1,5 +1,5 @@
-#! /usr/bin/python
-# -*- coding: utf-8 -*-
+#! /usr/bin/python2
+# -*- coding: utf8 -*-
 #
 # Rhythmbox-Microblogger - <http://github.com/aliva/Rhythmbox-Microblogger>
 # Copyright (C) 2010 Ali Vakilzade <ali.vakilzade in Gmail>
@@ -21,6 +21,7 @@
 import base64
 import hashlib
 import hmac
+import libxml2
 import pynotify
 import random
 import time
@@ -53,22 +54,22 @@ TWITTER={
 }
 
 GETGLUE={
-    'key'   :'',
-    'secret':'',
+    'key'   :'YzAzMGU0NGUxZmJmNzllZWU4Zjg2YjA0ZDAzNGYxZWI=',
+    'secret':'NWEyZjc5M2FhMGVlNTBhNWM5MWEwN2VhYzhhYjBmNmI=',
     'request_token':'http://api.getglue.com/oauth/request_token',
     'access_token' :'http://api.getglue.com/oauth/access_token',
     'authorization':'http://getglue.com/oauth/authorize',
     'post': 'http://api.getglue.com/v2/user/addCheckin?',
     'call_back':None,
-    'maxlen':300,
+    'maxlen':140,
 }
+
 class AddAccountRequest():
     def __init__(self):
         self.api=None
         self.type=None
         
         self.request_token=None
-        self.pin=None
         self.alias=None
 
         
@@ -82,6 +83,8 @@ class AddAccountRequest():
     def authorize(self, *args):
         set_hint, button, assistant, page, proxy_info=args
         
+        self.pin=''
+
         button.set_sensitive(False)
            
         if self.type=='identica':
@@ -105,7 +108,7 @@ class AddAccountRequest():
             return
         
         if resp['status'] != '200':
-            set_hint('ERR: %s\n%Check Your pin code' % (resp['status']))
+            set_hint('ERR: %s' % (resp['status']))
             button.set_sensitive(True)
             return
         
@@ -165,7 +168,7 @@ class Post:
         self.mb=mb
         
     def post(self, *args):
-        ui, self.artist, self.title, self.album, alias=args
+        ui, self.artist, self.title, self.album, alias, proxy_info=args
         
         conf=self.mb.get_conf('a', alias)
         
@@ -188,50 +191,55 @@ class Post:
         if len(text)==0:
             self._get_out()
             return
-
             
-        params = {
-            'oauth_consumer_key' : decode(api['key']),
-            'oauth_signature_method' : 'HMAC-SHA1',
-            'oauth_timestamp' : str(int(time.time())),
-            'oauth_nonce' : str(random.getrandbits(64)),
-            'oauth_version' : '1.0',
-            'oauth_token' : decode(conf['token_key']),
-            }
-        if api == GETGLUE:
-            consumer = oauth.Consumer(decode(api['key']), decode(api['secret']))
-            token = oauth.Token(decode(conf['token_key']), decode(conf['token_secret']))
-            client = oauth.Client(consumer, token)
-            link = api['post']+urllib.urlencode({'app' : "Rhythmbox Microblogging"})+"&"+urllib.urlencode({'source' : "http://www.rhythmbox.org"})+"&"+urllib.urlencode({'objectId' : 'recording_artists/'+self.artist.lower().replace(' ', '_')})+"&"+urllib.urlencode({'comment' : self.title+" from "+self.album})
-            resp, content = client.request(link, 'GET')
-            self._get_out()
-        else:
-            params['status'] = urllib.quote(text, '')
-            params['oauth_signature'] = hmac.new(
-                '%s&%s' % (decode(api['secret']), decode(conf['token_secret'])),
-                '&'.join([
-                    'POST',
-                    urllib.quote(api['post'], ''),
-                    urllib.quote('&'.join(['%s=%s' % (x, params[x])
-                                           for x in sorted(params)]), '')
-                    ]),
-                hashlib.sha1).digest().encode('base64').strip()
-            del params['status']
+        consumer = oauth.Consumer(decode(api['key']), decode(api['secret']))
+        token = oauth.Token(decode(conf['token_key']), decode(conf['token_secret']))
+        client = oauth.Client(consumer, token, proxy_info=proxy_info)
 
-            # post with oauth token
-            req = urllib2.Request(api['post'], data = urllib.urlencode(params))
-            req.add_data(urllib.urlencode({'status' : text}))
-            req.add_header('Authorization', 'OAuth %s' % ', '.join(
-                ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
+        if api == GETGLUE:
+            params={
+                'app':"Rhythmbox",
+                'source':"https://github.com/aliva/rhythmbox-microblogger",
+                'objectId':'recording_artists/'+self.artist.lower().replace(' ', '_'),
+                'comment':(self.title+" from "+self.album)[:140]
+            }
+        else:
+            params={
+                'status':text
+            }
+
+        link=api['post']+urllib.urlencode(params)
+        e=False
+
+        try:
+            resp, content = client.request(link, 'GET')
+        except Exception as err:
             try:
-                res = urllib2.urlopen(req)
-            except Exception as err:
                 w=get('alias')
                 w.set_text('Err: %s' % err)
-                return
-            finally:
                 self._get_out()
+                e=True
+            except UnboundLocalError:
+                pass
+
+        if e:
+            return
        
+        if resp['status'] != '200':
+            w=get('alias')
+            if api==GETGLUE:
+                doc=libxml2.parseDoc(content)
+                code=doc.xpathEval("/adaptiveblue/error/code")[0].content
+                if code=='302':
+                    err='Artist not found'
+                else:
+                    err=code
+            else:
+                err=resp['status']
+            w.set_text(' ERR: %s' % err)
+            self._get_out()
+            return
+
         notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
                                     self.mb.find_file('icon/%s.png' % conf['type']))

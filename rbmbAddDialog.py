@@ -62,17 +62,20 @@ class AddDialog(AddAccountRequest):
         page_id=self._get_page_id(page)
         type=self._get_account_type()
         self.request_set_type(type)
+        find=self._find_page_index
         
-        if page==0:
-            return 1
-        elif page==1:
-            return 2
-        elif page==2:
-            return 3
-        elif page==3:
-            return 5
-        elif page==5:
-            return 6
+        if   page_id=='select':
+            return find('authorize')
+        elif page_id=='authorize':
+            if type=='getglue':
+                return find('exchange')
+            return find('pin')
+        elif page_id=='pin':
+            return find('exchange')
+        elif page_id=='exchange':
+            return find('alias')
+        elif page_id=='alias':
+            return find('finish')
         return -1
       
     def _signal(self, assistant, id):
