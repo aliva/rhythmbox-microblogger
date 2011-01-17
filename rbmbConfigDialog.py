@@ -89,15 +89,11 @@ class ConfigDialog:
 
                     frame=tabui.get_object('manual-frame')
                     tabui.get_object('noproxy').connect('toggled', self._proxy_radio_changed, frame, False)
-                    tabui.get_object('env'    ).connect('toggled', self._proxy_radio_changed, frame, False)
                     tabui.get_object('manual' ).connect('toggled', self._proxy_radio_changed, frame, True )
 
                     proxy=self.mb.get_conf('proxy', 0)
                     if proxy=='none':
                         tabui.get_object('noproxy').set_active(True)
-                        frame.set_sensitive(False)
-                    elif proxy=='env':
-                        tabui.get_object('env').set_active(True)
                         frame.set_sensitive(False)
                     else:
                         tabui.get_object('manual').set_active(True)
@@ -108,7 +104,7 @@ class ConfigDialog:
 
                     self.proxy_widgets=tabui
                 except ImportError:
-                    for w in ('noproxy', 'env', 'manual', 'manual-frame'):
+                    for w in ('noproxy', 'manual', 'manual-frame'):
                         tabui.get_object(w).set_sensitive(False)
                     self.proxy_widgets=None
                     tabui.get_object('hint').set_text(
@@ -138,8 +134,6 @@ class ConfigDialog:
                     proxy=i
             if w.get_object('noproxy').get_active():
                 proxy='none'
-            if w.get_object('env').get_active():
-                proxy='env'
             uc('proxy'       , proxy)
             uc('proxy_server', w.get_object('proxy_server').get_text())
             uc('proxy_port'  , int(w.get_object('proxy_port'  ).get_value()))
