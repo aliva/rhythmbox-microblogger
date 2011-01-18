@@ -191,10 +191,6 @@ class Post:
         if len(text)==0:
             self._get_out()
             return
-            
-        consumer = oauth.Consumer(decode(api['key']), decode(api['secret']))
-        token = oauth.Token(decode(conf['token_key']), decode(conf['token_secret']))
-        client = oauth.Client(consumer, token, proxy_info=proxy_info)
 
         if api == GETGLUE:
             params={
@@ -203,43 +199,67 @@ class Post:
                 'objectId':'recording_artists/'+self.artist.lower().replace(' ', '_'),
                 'comment':(self.title+" from "+self.album)[:140]
             }
-        else:
-            params={
-                'status':text
-            }
+            consumer = oauth.Consumer(decode(api['key']), decode(api['secret']))
+            token = oauth.Token(decode(conf['token_key']), decode(conf['token_secret']))
+            client = oauth.Client(consumer, token, proxy_info=proxy_info)
+            link=api['post']+urllib.urlencode(params)
 
-        link=api['post']+urllib.urlencode(params)
-        e=False
-
-        try:
-            resp, content = client.request(link, 'GET')
-        except Exception as err:
             try:
+                resp, content = client.request(link, 'GET')
+            except Exception as err:
                 w=get('alias')
                 w.set_text('Err: %s' % err)
                 self._get_out()
-                e=True
-            except UnboundLocalError:
-                pass
-
-        if e:
-            return
+                return
        
-        if resp['status'] != '200':
-            w=get('alias')
-            if api==GETGLUE:
+            if resp['status'] != '200':
+                w=get('alias')
                 doc=libxml2.parseDoc(content)
                 code=doc.xpathEval("/adaptiveblue/error/code")[0].content
                 if code=='302':
                     err='Artist not found'
                 else:
                     err=code
-            else:
-                err=resp['status']
-            w.set_text(' ERR: %s' % err)
-            self._get_out()
-            return
+                w.set_text(' ERR: %s' % err)
+                self._get_out()
+                return
+        else:
+            params = {
+                'oauth_consumer_key' : decode(api['key']),
+                'oauth_signature_method' : 'HMAC-SHA1',
+                'oauth_timestamp' : str(int(time.time())),
+                'oauth_nonce' : str(random.getrandbits(64)),
+                'oauth_version' : '1.0',
+                'oauth_token' : decode(conf['token_key']),
+            }
 
+            params['status'] = urllib.quote(text, '')
+            params['oauth_signature'] = hmac.new(
+                '%s&%s' % (decode(api['secret']), decode(conf['token_secret'])),
+                '&'.join([
+                    'POST',
+                    urllib.quote(api['post'], ''),
+                    urllib.quote('&'.join(['%s=%s' % (x, params[x])
+                                           for x in sorted(params)]), '')
+                    ]),
+                hashlib.sha1).digest().encode('base64').strip()
+            del params['status']
+
+            # post with oauth token
+            req = urllib2.Request(api['post'], data = urllib.urlencode(params))
+            req.add_data(urllib.urlencode({'status' : text}))
+            req.add_header('Authorization', 'OAuth %s' % ', '.join(
+                ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
+
+            try:
+                res = urllib2.urlopen(req)
+            except Exception as err:
+                w=get('alias')
+                w.set_text('Err: %s' % err)
+                return
+            finally:
+                self._get_out()
+       
         notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
                                     self.mb.find_file('icon/%s.png' % conf['type']))

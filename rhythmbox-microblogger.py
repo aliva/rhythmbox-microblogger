@@ -188,8 +188,7 @@ class microblogger(rb.Plugin):
         if conf['type']=='getglue':
             w=get('entry')
             w.set_sensitive(False)
-            w.set_text('   ')
-            self._send_thread(None)
+            w.set_text('  ')
         
     def _send_thread(self, button):
         self.sending=True
