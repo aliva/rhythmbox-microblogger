@@ -256,15 +256,15 @@ class Post:
             except Exception as err:
                 w=get('alias')
                 w.set_text('Err: %s' % err)
-                return
-            finally:
                 self._get_out()
+                return
        
         notif=pynotify.Notification('Message sent to %s' % conf['alias'],
                                     'rbmb',
                                     self.mb.find_file('icon/%s.png' % conf['type']))
         notif.show()
         
+        self._get_out()
         w=get('general')
         w.hide_all()
 
