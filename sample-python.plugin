@@ -1,6 +1,6 @@
-[RB Plugin]
+[Plugin]
 Loader=python
-Module=rhythmbox-microblogger
+Module=microblogger
 IAge=1
 Name=Microblogger
 Description=send current music information to a micro blogging service
