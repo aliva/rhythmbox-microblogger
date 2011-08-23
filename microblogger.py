@@ -26,4 +26,15 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         ui_file = rb.find_plugin_file(self, "microblogger-prefs.ui")
         builder = Gtk.Builder()
         builder.add_from_file(ui_file)
+
+        builder.get_object('add_account').connect('clicked', self.on_add_account_clicked)
+        builder.get_object('del_account').connect('clicked', self.on_del_account_clicked)
+
         return builder.get_object('general')
+
+    def on_add_account_clicked(self, button):
+        print ('add')
+
+    def on_del_account_clicked(self, button):
+        print ('del')
+
