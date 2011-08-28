@@ -33,6 +33,9 @@
                           <object class="GtkTreeView" id="treeview1">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection" id="treeview-selection1"/>
+                            </child>
                           </object>
                         </child>
                       </object>
@@ -250,7 +253,7 @@ Set Empty for default</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="button4">
+          <object class="GtkButton" id="authorize">
             <property name="label" translatable="yes">Authorize</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -316,7 +319,7 @@ Set Empty for default</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="label6">
+          <object class="GtkLabel" id="note">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
           </object>
