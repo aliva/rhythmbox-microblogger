@@ -54,17 +54,60 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         
         self.builder.get_object('cancel').connect('clicked', self.on_cancel_clicked)
         
+        model = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
+        tree = self.builder.get_object('treeview')
+        tree.set_model(model)
+        
+        renderer = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn('Alias', renderer, text=0)
+        tree.append_column(column)
+        
+        renderer = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn('Account', renderer, text=1)
+        tree.append_column(column)
+        
+        self.update_accounts_list()
+        
         self.request = Requests(self.builder.get_object('note'))
 
         notebook = self.builder.get_object('general')
         notebook.set_show_tabs(False)
         return notebook
 
+    def update_accounts_list(self):
+        model = self.builder.get_object('treeview').get_model()
+        model.clear()
+        
+        for account in self.settings['accounts']:
+            iter = model.append()
+            model.set_value(iter, 0, account[0])
+            model.set_value(iter, 1, account[1])
+            
+    
     def on_add_account_clicked(self, button):
         self.builder.get_object('general').set_current_page(1)
 
     def on_del_account_clicked(self, button):
-        print ('del')
+        tree = self.builder.get_object('treeview')
+        selection = tree.get_selection()
+        model, iter = selection.get_selected()
+        
+        if iter == None:
+            return
+        
+        alias = model.get_value(iter, 0)
+              
+        accounts = []
+        
+        for account in self.settings['accounts']:
+            if account[0] != alias:
+                accounts.append(account)
+                
+        self.settings['accounts'] = accounts
+        
+        model.remove(iter)
+                
+        
 
     def on_cancel_clicked(self, button):
         self.on_type_change(None)
