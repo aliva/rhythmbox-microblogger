@@ -1,0 +1,7 @@
+<schemalist>
+  <schema id="ir.aliva.microblogger" path="/ir/aliva/microblogger/">
+    <key name="accounts" type="aas">
+      <default>[]</default>
+    </key>
+  </schema>
+</schemalist>

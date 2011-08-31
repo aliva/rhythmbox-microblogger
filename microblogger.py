@@ -21,7 +21,7 @@ class Microblogger(GObject.Object, Peas.Activatable):
 
     def __init__(self):
         GObject.Object.__init__(self)
-
+        
     def do_activate(self):
         pass
 
@@ -31,6 +31,9 @@ class Microblogger(GObject.Object, Peas.Activatable):
 
 class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = 'MicrobloggerConfigurable'
+    
+    def __init__(self):
+        self.settings = Gio.Settings("ir.aliva.microblogger")
 
     def do_create_configure_widget(self):
         ui_file = rb.find_plugin_file(self, "microblogger-prefs.ui")
@@ -46,6 +49,7 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
 
         self.builder.get_object('authorize').connect('clicked', self.on_authorize_clicked)
         self.builder.get_object('exchange').connect('clicked', self.on_exchange_clicked)
+        self.builder.get_object('save').connect('clicked', self.on_save_clicked)
         self.builder.get_object('alias').connect('changed', self.on_alias_changed)
         
         self.builder.get_object('cancel').connect('clicked', self.on_cancel_clicked)
@@ -93,6 +97,7 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
             
     def on_type_change(self, radio):
         self.builder.get_object('authorize').set_sensitive(True)
+        self.builder.get_object('pin').set_text('')
         self.builder.get_object('pin').set_sensitive(False)
         self.builder.get_object('exchange').set_sensitive(False)
         self.builder.get_object('alias').set_text('')
@@ -101,6 +106,17 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     def on_alias_changed(self, entry):
         r = entry.get_text_length() > 0 # and unique
         self.builder.get_object('save').set_sensitive(r)
+        
+    def on_save_clicked(self, button):
+        new_account = (self.builder.get_object('alias').get_text(),
+                       self.request.account,
+                       self.request.access_token,
+                       self.request.access_token_secret)
+        accounts = self.settings['accounts']
+        accounts.append(new_account)
+        self.settings['accounts']  = accounts
+        self.on_cancel_clicked(None)
+        
             
 class Requests:
     IDENTICA = {
@@ -187,4 +203,4 @@ class Requests:
         self.access_token_secret = access_token['oauth_token_secret']
         
         self.note_label.set_text('Done! Choose an alias and save')
-        return self.access_token, self.access_token_secret
+        return True
