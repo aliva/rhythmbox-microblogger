@@ -8,10 +8,11 @@ import urlparse
 import webbrowser
 
 import rb
+from gi.repository import Gio
 from gi.repository import GObject
+from gi.repository import Gtk
 from gi.repository import Peas
 from gi.repository import PeasGtk
-from gi.repository import Gtk
 from gi.repository import RB
 
 class Microblogger(GObject.Object, Peas.Activatable):
@@ -186,4 +187,4 @@ class Requests:
         self.access_token_secret = access_token['oauth_token_secret']
         
         self.note_label.set_text('Done! Choose an alias and save')
-        return True
+        return self.access_token, self.access_token_secret
