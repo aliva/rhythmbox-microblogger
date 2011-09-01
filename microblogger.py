@@ -4,10 +4,18 @@
 import oauth2 as oauth
 
 import base64
+import hashlib
+import hmac
+import libxml2
+import random
+import time
+import urllib
+import urllib2
 import urlparse
 import webbrowser
 
 import rb
+from gi.repository import Gdk
 from gi.repository import Gio
 from gi.repository import GObject
 from gi.repository import Gtk
@@ -38,8 +46,8 @@ class Microblogger(GObject.Object, Peas.Activatable):
         shell = self.object
         self.action = Gtk.Action (name='MicroBlogger', label=_('Show MicroBlogger Message Box'),
                       tooltip=_(''),
-                      stock_id=Gtk.STOCK_OK)
-        self.action_id = self.action.connect ('activate', self.send_notice, shell)
+                      stock_id='')
+        self.action_id = self.action.connect ('activate', self.show_message_box, shell)
         self.action_group = Gtk.ActionGroup (name='MicroBloggerPluginActions')
         self.action_group.add_action_with_accel (self.action, "<control>M")
         
@@ -47,8 +55,35 @@ class Microblogger(GObject.Object, Peas.Activatable):
         uim.insert_action_group (self.action_group, 0)
         self.ui_id = uim.add_ui_from_string (UI_STRING)
         uim.ensure_update ()
-
+        
+        self.settings.connect('changed', self.on_settings_changed)
+        self.box = Gtk.HBox()
+        self.entry = Gtk.Entry()
+        self.length = Gtk.Label()
+        self.combo = Gtk.ComboBoxText()
+        self.send = Gtk.Button('Send!')
+        self.cancel = Gtk.Button(stock=Gtk.STOCK_CANCEL)
+        
+        self.entry.connect('key_press_event', self.on_entry_key_press_event)
+        self.entry.connect('changed', self.check_send_button)
+        self.entry.connect('activate', self.post)
+        self.combo.connect('changed', self.check_send_button)
+        self.send.connect('clicked', self.post)
+        self.cancel.connect('clicked', self.on_cancel_clicked)
+        
+        self.box.pack_start(self.entry , True , True, 0)
+        self.box.pack_start(self.length, False, True, 0)
+        self.box.pack_start(self.combo , False, True, 0)
+        self.box.pack_start(self.send  , False, True, 0)
+        self.box.pack_start(self.cancel, False, True, 0)
+        
+        shell.add_widget (self.box, RB.ShellUILocation.MAIN_TOP, False, True)
+        self.check_send_button(None)
+        self.on_settings_changed(self.settings, 'accounts')
+            
     def do_deactivate(self):
+        self.box.destroy()
+        
         shell = self.object
             
         uim = shell.get_ui_manager()
@@ -57,9 +92,52 @@ class Microblogger(GObject.Object, Peas.Activatable):
 
         self.action_group = None
         self.action = None
+        
+    def on_settings_changed(self, settings, key):
+        if key == 'accounts':
+            self.combo.remove_all()
+            for account in self.settings['accounts']:
+                self.combo.append_text(account[0])
+            self.entry.set_text('Add account from plugin prefrences')
+                
+        self.entry.set_text('')
+        has_account = len(self.settings['accounts'])
+        self.entry.set_sensitive(has_account)
+        self.combo.set_sensitive(has_account)
     
-    def send_notice(self, action, shell):
-        pass
+    def on_cancel_clicked(self, button):
+        self.box.hide()
+        
+    def on_entry_key_press_event(self, entry, event):
+        if Gdk.keyval_from_name('Escape') == event.keyval:
+            self.on_cancel_clicked(None)
+            
+    def check_send_button(self, widget):     
+        length = self.entry.get_text_length()
+        self.length.set_text(str(140-length))
+        
+        can_send = length and (self.combo.get_active() != -1)
+        self.send.set_sensitive(can_send)
+        
+        return can_send 
+            
+    def show_message_box(self, action, shell):
+        self.box.show_all()
+        self.entry.grab_focus()
+        
+        self.combo.set_active(0)
+        for account in self.settings['accounts']:
+            if self.settings['last-used'] == account[0]:
+                self.combo.set_active(id)
+                
+    def post(self, widget):
+        if self.check_send_button(None) == False:
+            return
+        
+        active = self.combo.get_active()
+        request = Requests(None)
+        account  = self.settings['accounts'][active-1]
+        request.post(account, self.entry)
 
 class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = 'MicrobloggerConfigurable'
@@ -117,6 +195,7 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
             
     
     def on_add_account_clicked(self, button):
+        self.update_accounts_list()
         self.builder.get_object('general').set_current_page(1)
 
     def on_del_account_clicked(self, button):
@@ -279,3 +358,66 @@ class Requests:
         
         self.note_label.set_text('Done! Choose an alias and save')
         return True
+    
+    def post(self, account, entry):
+        if account[1] == 'twitter':
+            api = self.TWITTER
+        elif account[1] == 'identi.ca':
+            api = self.IDENTICA
+        else:
+            api = self.GETGLUE
+        
+        key = base64.b64decode(api['key'])
+        secret = base64.b64decode(api['secret'])
+            
+        if api == self.GETGLUE:
+            params={
+                'app':"Rhythmbox",
+                'source':"https://github.com/aliva/rhythmbox-microblogger",
+                'objectId':'recording_artists/'+self.artist.lower().replace(' ', '_'), # TODO
+                'comment':(self.title+" from "+self.album)[:140]
+            }
+            consumer = oauth.Consumer(key, secret)
+            token = oauth.Token(account[2], account[3])
+            client = oauth.Client(consumer, token)
+            link=api['post']+urllib.urlencode(params)
+
+            resp, content = client.request(link, 'GET')
+       
+            if resp['status'] != '200':
+                doc=libxml2.parseDoc(content)
+                code=doc.xpathEval("/adaptiveblue/error/code")[0].content
+                if code=='302':
+                    err='Artist not found'
+                else:
+                    err=code
+                entry.set_text(' ERR: %s' % err)
+                return
+        else:
+            params = {
+                'oauth_consumer_key' : key,
+                'oauth_signature_method' : 'HMAC-SHA1',
+                'oauth_timestamp' : str(int(time.time())),
+                'oauth_nonce' : str(random.getrandbits(64)),
+                'oauth_token' : account[2],
+            }
+
+            params['status'] = urllib.quote(entry.get_text(), '')
+            params['oauth_signature'] = hmac.new(
+                '%s&%s' % (secret, account[3]),
+                '&'.join([
+                    'POST',
+                    urllib.quote(api['post'], ''),
+                    urllib.quote('&'.join(['%s=%s' % (x, params[x])
+                                           for x in sorted(params)]), '')
+                    ]),
+                hashlib.sha1).digest().encode('base64').strip()
+            del params['status']
+
+            # post with oauth token
+            req = urllib2.Request(api['post'], data = urllib.urlencode(params))
+            req.add_data(urllib.urlencode({'status' :entry.get_text()}))
+            req.add_header('Authorization', 'OAuth %s' % ', '.join(
+                ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
+
+            res = urllib2.urlopen(req)
