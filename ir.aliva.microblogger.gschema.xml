@@ -1,7 +1,10 @@
 <schemalist>
-  <schema id="ir.aliva.microblogger" path="/ir/aliva/microblogger/">
-    <key name="accounts" type="aas">
-      <default>[]</default>
-    </key>
-  </schema>
+	<schema id="ir.aliva.microblogger" path="/ir/aliva/microblogger/">
+		<key name="accounts" type="aas">
+			<default>[]</default>
+		</key>
+		<key name="last-used" type="s">	
+			<default>""</default>
+		</key>
+	</schema>
 </schemalist>

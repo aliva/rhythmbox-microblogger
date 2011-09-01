@@ -15,6 +15,16 @@ from gi.repository import Peas
 from gi.repository import PeasGtk
 from gi.repository import RB
 
+UI_STRING = '''
+<ui>
+    <menubar name="MenuBar">
+        <menu name="ViewMenu" action="View">
+            <menuitem name="MicroBlogger" action="MicroBlogger"/>
+        </menu>
+    </menubar>
+</ui>
+'''
+
 class Microblogger(GObject.Object, Peas.Activatable):
     __gtype_name = 'MicroBloggerPlugin'
     object = GObject.property (type = GObject.Object)
@@ -22,12 +32,34 @@ class Microblogger(GObject.Object, Peas.Activatable):
     def __init__(self):
         GObject.Object.__init__(self)
         
+        self.settings = Gio.Settings("ir.aliva.microblogger")
+        
     def do_activate(self):
-        pass
+        shell = self.object
+        self.action = Gtk.Action (name='MicroBlogger', label=_('Show MicroBlogger Message Box'),
+                      tooltip=_(''),
+                      stock_id=Gtk.STOCK_OK)
+        self.action_id = self.action.connect ('activate', self.send_notice, shell)
+        self.action_group = Gtk.ActionGroup (name='MicroBloggerPluginActions')
+        self.action_group.add_action_with_accel (self.action, "<control>M")
+        
+        uim = shell.get_ui_manager ()
+        uim.insert_action_group (self.action_group, 0)
+        self.ui_id = uim.add_ui_from_string (UI_STRING)
+        uim.ensure_update ()
 
     def do_deactivate(self):
-        pass
+        shell = self.object
+            
+        uim = shell.get_ui_manager()
+        uim.remove_ui (self.ui_id)
+        uim.remove_action_group (self.action_group)
 
+        self.action_group = None
+        self.action = None
+    
+    def send_notice(self, action, shell):
+        pass
 
 class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = 'MicrobloggerConfigurable'
