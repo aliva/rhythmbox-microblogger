@@ -43,6 +43,8 @@ class Microblogger(GObject.Object, Peas.Activatable):
         self.settings = Gio.Settings("ir.aliva.microblogger")
         
     def do_activate(self):
+        self.playing_entry = None
+        
         shell = self.object
         self.action = Gtk.Action (name='MicroBlogger', label=_('Show MicroBlogger Message Box'),
                       tooltip=_(''),
@@ -112,12 +114,36 @@ class Microblogger(GObject.Object, Peas.Activatable):
         if Gdk.keyval_from_name('Escape') == event.keyval:
             self.on_cancel_clicked(None)
             
-    def check_send_button(self, widget):     
+    def check_send_button(self, widget):        
         length = self.entry.get_text_length()
         self.length.set_text(str(140-length))
         
         can_send = length and (self.combo.get_active() != -1)
         self.send.set_sensitive(can_send)
+        
+        text = self.entry.get_text()
+        
+        if self.playing_entry != None:
+            playing_entry = self.playing_entry
+            items={
+                '{title}' :playing_entry.get_string(RB.RhythmDBPropType.TITLE),
+                '{genre}' :playing_entry.get_string(RB.RhythmDBPropType.GENRE),
+                '{artist}':playing_entry.get_string(RB.RhythmDBPropType.ARTIST),
+                '{album}' :playing_entry.get_string(RB.RhythmDBPropType.ALBUM),
+                '{rate}'  :playing_entry.get_double(RB.RhythmDBPropType.RATING),
+                '{year}'  :playing_entry.get_ulong (RB.RhythmDBPropType.YEAR),
+                '{pcount}':playing_entry.get_ulong (RB.RhythmDBPropType.PLAY_COUNT),
+            }
+            
+            for item in items:
+                # if has tag
+                tmp=str(items[item])
+                #tmp=self._remove_forbidden_chars(tmp)
+                text=text.replace('#'+item, '#'+tmp)
+
+                # if hasn't tag
+                text=text.replace(item, str(items[item]))
+        self.entry.set_text(text)
         
         return can_send 
             
@@ -125,10 +151,17 @@ class Microblogger(GObject.Object, Peas.Activatable):
         self.box.show_all()
         self.entry.grab_focus()
         
+        shell = self.object
+        self.playing_entry = shell.get_player().get_playing_entry()
+        
+        self.entry.set_text(self.settings['template'])
+        
+        id = 0
         self.combo.set_active(0)
         for account in self.settings['accounts']:
             if self.settings['last-used'] == account[0]:
                 self.combo.set_active(id)
+            id+=1
                 
     def post(self, widget):
         if self.check_send_button(None) == False:
@@ -150,6 +183,9 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.builder = Gtk.Builder()
         self.builder.add_from_file(ui_file)
 
+        self.builder.get_object('template').set_text('**'+self.settings['template'])
+        self.builder.get_object('template').connect('changed', self.on_template_changed)
+        
         self.builder.get_object('add_account').connect('clicked', self.on_add_account_clicked)
         self.builder.get_object('del_account').connect('clicked', self.on_del_account_clicked)
         
@@ -271,6 +307,12 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.settings['accounts']  = accounts
         self.on_cancel_clicked(None)
         
+    def on_template_changed(self, entry):
+        text = self.builder.get_object('template').get_text()
+        if len(text):
+            self.settings['template'] = text
+        else:
+            self.settings['template'] = "[Rhythmbox] {title} by #{artist} from #{album}"
             
 class Requests:
     IDENTICA = {

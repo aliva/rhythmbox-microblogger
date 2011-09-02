@@ -6,5 +6,8 @@
 		<key name="last-used" type="s">	
 			<default>""</default>
 		</key>
+		<key name="template" type="s">
+			<default>"[Rhythmbox] {title} by #{artist} from #{album}"</default>
+		</key>
 	</schema>
 </schemalist>
