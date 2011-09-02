@@ -6,6 +6,7 @@ import oauth2 as oauth
 import base64
 import hashlib
 import hmac
+import httplib2
 import libxml2
 import random
 import time
@@ -17,6 +18,7 @@ import webbrowser
 import rb
 from gi.repository import Gdk
 from gi.repository import Gio
+from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Peas
@@ -167,10 +169,25 @@ class Microblogger(GObject.Object, Peas.Activatable):
         if self.check_send_button(None) == False:
             return
         
+        self.box.set_sensitive(False)
+        
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+            
         active = self.combo.get_active()
         request = Requests(None)
         account  = self.settings['accounts'][active-1]
-        request.post(account, self.entry)
+        result = request.post(account, self.entry)
+        
+        self.box.set_sensitive(True)
+        
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+        
+        if result == True:
+            self.entry.set_text('Done!')
+            self.on_cancel_clicked(None)
+            #GLib.timeout_add_seconds(5, self.on_cancel_clicked, None 
 
 class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = 'MicrobloggerConfigurable'
@@ -349,6 +366,10 @@ class Requests:
         self.request_token = None
         self.api = None
         self.account = None
+        
+        #import socks
+        #self.proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5, 'localhost', 0)
+        self.proxy_info = None 
 
     def authorize(self, account):
         self.account = account
@@ -366,7 +387,7 @@ class Requests:
         secret = base64.b64decode(self.api['secret'])
         
         self.consumer = oauth.Consumer(key, secret)
-        client = oauth.Client(self.consumer)
+        client = oauth.Client(self.consumer, proxy_info=self.proxy_info)
         
         resp, content = client.request(self.api['request_token'])
         
@@ -385,7 +406,7 @@ class Requests:
         token = oauth.Token(self.request_token['oauth_token'], self.request_token['oauth_token_secret'])
         token.set_verifier(pin_code)
         
-        client = oauth.Client(self.consumer, token)
+        client = oauth.Client(self.consumer, token, proxy_info=self.proxy_info)
         
         resp, content = client.request(self.api['access_token'], "POST")
         
@@ -402,6 +423,12 @@ class Requests:
         return True
     
     def post(self, account, entry):
+        text = entry.get_text()
+        entry.set_text('Wait!')
+        
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+        
         if account[1] == 'twitter':
             api = self.TWITTER
         elif account[1] == 'identi.ca':
@@ -421,7 +448,7 @@ class Requests:
             }
             consumer = oauth.Consumer(key, secret)
             token = oauth.Token(account[2], account[3])
-            client = oauth.Client(consumer, token)
+            client = oauth.Client(consumer, token, proxy_info=self.proxy_info)
             link=api['post']+urllib.urlencode(params)
 
             resp, content = client.request(link, 'GET')
@@ -434,7 +461,7 @@ class Requests:
                 else:
                     err=code
                 entry.set_text(' ERR: %s' % err)
-                return
+                return False
         else:
             params = {
                 'oauth_consumer_key' : key,
@@ -444,7 +471,7 @@ class Requests:
                 'oauth_token' : account[2],
             }
 
-            params['status'] = urllib.quote(entry.get_text(), '')
+            params['status'] = urllib.quote(text, '')
             params['oauth_signature'] = hmac.new(
                 '%s&%s' % (secret, account[3]),
                 '&'.join([
@@ -458,8 +485,10 @@ class Requests:
 
             # post with oauth token
             req = urllib2.Request(api['post'], data = urllib.urlencode(params))
-            req.add_data(urllib.urlencode({'status' :entry.get_text()}))
+            req.add_data(urllib.urlencode({'status' :text}))
             req.add_header('Authorization', 'OAuth %s' % ', '.join(
                 ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
 
-            res = urllib2.urlopen(req)
+            urllib2.urlopen(req)
+            
+            return True
