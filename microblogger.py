@@ -176,7 +176,7 @@ class Microblogger(GObject.Object, Peas.Activatable):
             
         active = self.combo.get_active()
         request = Requests(None)
-        account  = self.settings['accounts'][active-1]
+        account  = self.settings['accounts'][active]
         
         title  = self.playing_entry.get_string(RB.RhythmDBPropType.TITLE)
         artist = self.playing_entry.get_string(RB.RhythmDBPropType.ARTIST)
