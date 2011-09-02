@@ -177,7 +177,12 @@ class Microblogger(GObject.Object, Peas.Activatable):
         active = self.combo.get_active()
         request = Requests(None)
         account  = self.settings['accounts'][active-1]
-        result = request.post(account, self.entry)
+        
+        title  = self.playing_entry.get_string(RB.RhythmDBPropType.TITLE)
+        artist = self.playing_entry.get_string(RB.RhythmDBPropType.ARTIST)
+        album  = self.playing_entry.get_string(RB.RhythmDBPropType.ALBUM)
+        
+        result = request.post(account, self.entry, title, album, artist)
         
         self.box.set_sensitive(True)
         
@@ -211,7 +216,7 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.builder = Gtk.Builder()
         self.builder.add_from_file(ui_file)
 
-        self.builder.get_object('template').set_text('**'+self.settings['template'])
+        self.builder.get_object('template').set_text(str(self.settings['template']))
         self.builder.get_object('template').connect('changed', self.on_template_changed)
         
         self.builder.get_object('add_account').connect('clicked', self.on_add_account_clicked)
@@ -433,7 +438,7 @@ class Requests:
         self.note_label.set_text('Done! Choose an alias and save')
         return True
     
-    def post(self, account, entry):
+    def post(self, account, entry, title, album, artist):
         text = entry.get_text()
         entry.set_text('Wait!')
         
@@ -454,8 +459,8 @@ class Requests:
             params={
                 'app':"Rhythmbox",
                 'source':"https://github.com/aliva/rhythmbox-microblogger",
-                'objectId':'recording_artists/'+self.artist.lower().replace(' ', '_'), # TODO
-                'comment':(self.title+" from "+self.album)[:140]
+                'objectId':'recording_artists/'+artist.lower().replace(' ', '_'),
+                'comment':(title+" from "+album)[:140]
             }
             consumer = oauth.Consumer(key, secret)
             token = oauth.Token(account[2], account[3])
