@@ -360,10 +360,10 @@ class Requests:
     TWITTER = {
          'key'   :'NlFmM0JtVmpETk1UOUlYek9oa1E0Zw==',
          'secret':'QVd6SnBldWNvM0dPU0pXRlpGcGJpeXlJOGNlSnRWb1k4TmRZdHQzVVpn',
-         'request_token':'https://twitter.com/oauth/request_token',
-         'access_token' :'https://twitter.com/oauth/access_token',
-         'authorization':'https://twitter.com/oauth/authorize',
-         'post': 'https://twitter.com/statuses/update.json',
+         'request_token':'https://api.twitter.com/oauth/request_token',
+         'access_token' :'https://api.twitter.com/oauth/access_token',
+         'authorization':'https://api.twitter.com/oauth/authorize',
+         'post': 'https://api.twitter.com/statuses/update.json',
     }
 
     GETGLUE = {
@@ -384,7 +384,7 @@ class Requests:
         self.account = None
         
         #import socks
-        #self.proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5, 'localhost', 0)
+        #self.proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5, 'localhost', 71)
         self.proxy_info = None 
 
     def authorize(self, account):
@@ -440,7 +440,7 @@ class Requests:
     
     def post(self, account, entry, title, album, artist):
         text = entry.get_text()
-        entry.set_text('Wait!')
+        entry.set_text('Wait! (This Box will hide if done!')
         
         while Gtk.events_pending():
             Gtk.main_iteration()
@@ -477,7 +477,6 @@ class Requests:
                 else:
                     err=code
                 entry.set_text(' ERR: %s' % err)
-                return False
         else:
             params = {
                 'oauth_consumer_key' : key,
@@ -505,6 +504,10 @@ class Requests:
             req.add_header('Authorization', 'OAuth %s' % ', '.join(
                 ['%s="%s"' % (x, urllib.quote(params[x], '')) for x in params]))
 
-            urllib2.urlopen(req)
+            try:
+                urllib2.urlopen(req)
+            except urllib2.URLError as err:
+                entry.set_text('Err: %s' % err)
+                return False
             
             return True
