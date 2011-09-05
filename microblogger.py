@@ -15,7 +15,6 @@ import urllib2
 import urlparse
 import webbrowser
 
-import rb
 from gi.repository import Gdk
 from gi.repository import Gio
 from gi.repository import GLib
@@ -212,7 +211,12 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.settings = Gio.Settings("ir.aliva.microblogger")
 
     def do_create_configure_widget(self):
-        ui_file = rb.find_plugin_file(self, "microblogger-prefs.ui")
+        try:
+            import rb
+            ui_file = rb.find_plugin_file(self, "microblogger-prefs.ui")
+        except ImportError:
+            ui_file = '/usr/share/rhythmbox/plugins/microblogger/microblogger-prefs.ui'
+        
         self.builder = Gtk.Builder()
         self.builder.add_from_file(ui_file)
 
