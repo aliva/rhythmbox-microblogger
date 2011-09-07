@@ -177,9 +177,12 @@ class Microblogger(GObject.Object, Peas.Activatable):
         request = Requests(None)
         account  = self.settings['accounts'][active]
         
-        title  = self.playing_entry.get_string(RB.RhythmDBPropType.TITLE)
-        artist = self.playing_entry.get_string(RB.RhythmDBPropType.ARTIST)
-        album  = self.playing_entry.get_string(RB.RhythmDBPropType.ALBUM)
+        if self. playing_entry == None:
+            title = artist = album = ''
+        else:
+            title  = self.playing_entry.get_string(RB.RhythmDBPropType.TITLE)
+            artist = self.playing_entry.get_string(RB.RhythmDBPropType.ARTIST)
+            album  = self.playing_entry.get_string(RB.RhythmDBPropType.ALBUM)
         
         result = request.post(account, self.entry, title, album, artist)
         
