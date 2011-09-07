@@ -7,6 +7,7 @@
 
     git clone git://github.com/aliva/rhythmbox-microblogger.git
     cd rhythmbox-microblogger
+    sudo make install
 
 
 restart rhythmbox and in <code>Edit -> Plugins</code> activae microblogger. use Prefrences button to add accounts. close window when done
