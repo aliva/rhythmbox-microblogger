@@ -370,7 +370,7 @@ class Requests:
          'request_token':'https://api.twitter.com/oauth/request_token',
          'access_token' :'https://api.twitter.com/oauth/access_token',
          'authorization':'https://api.twitter.com/oauth/authorize',
-         'post': 'https://api.twitter.com/statuses/update.json',
+         'post': 'https://api.twitter.com/1/statuses/update.json',
     }
 
     GETGLUE = {
