@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import httplib2
 import libxml2
+import os
 import random
 import time
 import urllib
@@ -40,12 +41,12 @@ class Microblogger(GObject.Object, Peas.Activatable):
 
     def __init__(self):
         GObject.Object.__init__(self)
-        
+
         self.settings = Gio.Settings("ir.aliva.microblogger")
-        
+
     def do_activate(self):
         self.playing_entry = None
-        
+
         shell = self.object
         self.action = Gtk.Action (name='MicroBlogger', label=_('Show MicroBlogger Message Box'),
                       tooltip=_(''),
@@ -53,12 +54,12 @@ class Microblogger(GObject.Object, Peas.Activatable):
         self.action_id = self.action.connect ('activate', self.show_message_box, shell)
         self.action_group = Gtk.ActionGroup (name='MicroBloggerPluginActions')
         self.action_group.add_action_with_accel (self.action, "<control>M")
-        
-        uim = shell.get_ui_manager ()
+
+        uim = shell.props.ui_manager
         uim.insert_action_group (self.action_group, 0)
         self.ui_id = uim.add_ui_from_string (UI_STRING)
         uim.ensure_update ()
-        
+
         self.settings.connect('changed', self.on_settings_changed)
         self.box = Gtk.HBox()
         self.entry = Gtk.Entry()
@@ -66,64 +67,64 @@ class Microblogger(GObject.Object, Peas.Activatable):
         self.combo = Gtk.ComboBoxText()
         self.send = Gtk.Button('Send!')
         self.cancel = Gtk.Button(stock=Gtk.STOCK_CANCEL)
-        
+
         self.entry.connect('key_press_event', self.on_entry_key_press_event)
         self.entry.connect('changed', self.check_send_button)
         self.entry.connect('activate', self.post)
         self.combo.connect('changed', self.check_send_button)
         self.send.connect('clicked', self.post)
         self.cancel.connect('clicked', self.on_cancel_clicked)
-        
+
         self.box.pack_start(self.entry , True , True, 0)
         self.box.pack_start(self.length, False, True, 0)
         self.box.pack_start(self.combo , False, True, 0)
         self.box.pack_start(self.send  , False, True, 0)
         self.box.pack_start(self.cancel, False, True, 0)
-        
+
         shell.add_widget (self.box, RB.ShellUILocation.MAIN_TOP, False, True)
         self.check_send_button(None)
         self.on_settings_changed(self.settings, 'accounts')
-            
+
     def do_deactivate(self):
         self.box.destroy()
-        
+
         shell = self.object
-            
-        uim = shell.get_ui_manager()
+
+        uim = shell.props.ui_manager
         uim.remove_ui (self.ui_id)
         uim.remove_action_group (self.action_group)
 
         self.action_group = None
         self.action = None
-        
+
     def on_settings_changed(self, settings, key):
         if key == 'accounts':
             self.combo.remove_all()
             for account in self.settings['accounts']:
                 self.combo.append_text(account[0])
             self.entry.set_text('Add account from plugin prefrences')
-                
+
         self.entry.set_text('')
         has_account = len(self.settings['accounts'])
         self.entry.set_sensitive(has_account)
         self.combo.set_sensitive(has_account)
-    
+
     def on_cancel_clicked(self, button):
         self.box.hide()
-        
+
     def on_entry_key_press_event(self, entry, event):
         if Gdk.keyval_from_name('Escape') == event.keyval:
             self.on_cancel_clicked(None)
-            
-    def check_send_button(self, widget):        
+
+    def check_send_button(self, widget):
         length = self.entry.get_text_length()
         self.length.set_text(str(140-length))
-        
+
         can_send = length and (self.combo.get_active() != -1)
         self.send.set_sensitive(can_send)
-        
+
         text = self.entry.get_text()
-        
+
         if self.playing_entry != None:
             playing_entry = self.playing_entry
             items={
@@ -135,7 +136,7 @@ class Microblogger(GObject.Object, Peas.Activatable):
                 '{year}'  :playing_entry.get_ulong (RB.RhythmDBPropType.YEAR),
                 '{pcount}':playing_entry.get_ulong (RB.RhythmDBPropType.PLAY_COUNT),
             }
-            
+
             for item in items:
                 # if has tag
                 tmp=str(items[item])
@@ -145,57 +146,57 @@ class Microblogger(GObject.Object, Peas.Activatable):
                 # if hasn't tag
                 text=text.replace(item, str(items[item]))
         self.entry.set_text(text)
-        
-        return can_send 
-            
+
+        return can_send
+
     def show_message_box(self, action, shell):
         self.box.show_all()
         self.entry.grab_focus()
-        
+
         shell = self.object
-        self.playing_entry = shell.get_player().get_playing_entry()
-        
+        self.playing_entry = shell.props.shell_player.get_playing_entry()
+
         self.entry.set_text(self.settings['template'])
-        
+
         id = 0
         self.combo.set_active(0)
         for account in self.settings['accounts']:
             if self.settings['last-used'] == account[0]:
                 self.combo.set_active(id)
             id+=1
-                
+
     def post(self, widget):
         if self.check_send_button(None) == False:
             return
-        
+
         self.box.set_sensitive(False)
-        
+
         while Gtk.events_pending():
             Gtk.main_iteration()
-            
+
         active = self.combo.get_active()
         request = Requests(None)
         account  = self.settings['accounts'][active]
-        
+
         if self. playing_entry == None:
             title = artist = album = ''
         else:
             title  = self.playing_entry.get_string(RB.RhythmDBPropType.TITLE)
             artist = self.playing_entry.get_string(RB.RhythmDBPropType.ARTIST)
             album  = self.playing_entry.get_string(RB.RhythmDBPropType.ALBUM)
-        
+
         result = request.post(account, self.entry, title, album, artist)
-        
+
         self.box.set_sensitive(True)
-        
+
         while Gtk.events_pending():
             Gtk.main_iteration()
-        
+
         if result == True:
             self.entry.set_text('Done!')
             self.on_cancel_clicked(None)
-            #GLib.timeout_add_seconds(5, self.on_cancel_clicked, None 
-            
+            #GLib.timeout_add_seconds(5, self.on_cancel_clicked, None
+
     def fix_tag(self, text):
         chars='!@#$%^&*()-+=\\|/[]{};:\'"<>,? '
 
@@ -209,26 +210,22 @@ class Microblogger(GObject.Object, Peas.Activatable):
 
 class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     __gtype_name__ = 'MicrobloggerConfigurable'
-    
+
     def __init__(self):
         self.settings = Gio.Settings("ir.aliva.microblogger")
 
     def do_create_configure_widget(self):
-        try:
-            import rb
-            ui_file = rb.find_plugin_file(self, "microblogger-prefs.ui")
-        except ImportError:
-            ui_file = '/usr/share/rhythmbox/plugins/microblogger/microblogger-prefs.ui'
-        
+        ui_file = os.path.join(os.path.dirname(__file__), 'microblogger-prefs.ui')
+
         self.builder = Gtk.Builder()
         self.builder.add_from_file(ui_file)
 
         self.builder.get_object('template').set_text(str(self.settings['template']))
         self.builder.get_object('template').connect('changed', self.on_template_changed)
-        
+
         self.builder.get_object('add_account').connect('clicked', self.on_add_account_clicked)
         self.builder.get_object('del_account').connect('clicked', self.on_del_account_clicked)
-        
+
         self.builder.get_object('identica').connect('toggled', self.on_type_change)
         self.builder.get_object('twitter').connect('toggled', self.on_type_change)
         self.builder.get_object('getglue').connect('toggled', self.on_type_change)
@@ -237,23 +234,23 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.builder.get_object('exchange').connect('clicked', self.on_exchange_clicked)
         self.builder.get_object('save').connect('clicked', self.on_save_clicked)
         self.builder.get_object('alias').connect('changed', self.on_alias_changed)
-        
+
         self.builder.get_object('cancel').connect('clicked', self.on_cancel_clicked)
-        
+
         model = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         tree = self.builder.get_object('treeview')
         tree.set_model(model)
-        
+
         renderer = Gtk.CellRendererText()
         column = Gtk.TreeViewColumn('Alias', renderer, text=0)
         tree.append_column(column)
-        
+
         renderer = Gtk.CellRendererText()
         column = Gtk.TreeViewColumn('Account', renderer, text=1)
         tree.append_column(column)
-        
+
         self.update_accounts_list()
-        
+
         self.request = Requests(self.builder.get_object('note'))
 
         notebook = self.builder.get_object('general')
@@ -263,13 +260,13 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
     def update_accounts_list(self):
         model = self.builder.get_object('treeview').get_model()
         model.clear()
-        
+
         for account in self.settings['accounts']:
             iter = model.append()
             model.set_value(iter, 0, account[0])
             model.set_value(iter, 1, account[1])
-            
-    
+
+
     def on_add_account_clicked(self, button):
         self.update_accounts_list()
         self.builder.get_object('general').set_current_page(1)
@@ -278,23 +275,23 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         tree = self.builder.get_object('treeview')
         selection = tree.get_selection()
         model, iter = selection.get_selected()
-        
+
         if iter == None:
             return
-        
+
         alias = model.get_value(iter, 0)
-              
+
         accounts = []
-        
+
         for account in self.settings['accounts']:
             if account[0] != alias:
                 accounts.append(account)
-                
+
         self.settings['accounts'] = accounts
-        
+
         model.remove(iter)
-                
-        
+
+
 
     def on_cancel_clicked(self, button):
         self.on_type_change(None)
@@ -307,24 +304,24 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
             account = 'twitter'
         else:
             account = 'getglue'
-            
+
         result = self.request.authorize(account)
-        
+
         if result:
             self.builder.get_object('authorize').set_sensitive(False)
             self.builder.get_object('pin').set_sensitive(True)
             self.builder.get_object('exchange').set_sensitive(True)
-            
+
     def on_exchange_clicked(self, button):
         pin_code = self.builder.get_object('pin').get_text()
-        
+
         result = self.request.exchange(pin_code)
-        
+
         if result:
             self.builder.get_object('alias').set_sensitive(True)
             self.builder.get_object('pin').set_sensitive(False)
             self.builder.get_object('exchange').set_sensitive(False)
-            
+
     def on_type_change(self, radio):
         self.builder.get_object('authorize').set_sensitive(True)
         self.builder.get_object('pin').set_text('')
@@ -332,11 +329,11 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         self.builder.get_object('exchange').set_sensitive(False)
         self.builder.get_object('alias').set_text('')
         self.builder.get_object('alias').set_sensitive(False)
-        
+
     def on_alias_changed(self, entry):
         r = entry.get_text_length() > 0 # and unique
         self.builder.get_object('save').set_sensitive(r)
-        
+
     def on_save_clicked(self, button):
         new_account = (self.builder.get_object('alias').get_text(),
                        self.request.account,
@@ -346,14 +343,14 @@ class MicrobloggerConfigurable(GObject.Object, PeasGtk.Configurable):
         accounts.append(new_account)
         self.settings['accounts']  = accounts
         self.on_cancel_clicked(None)
-        
+
     def on_template_changed(self, entry):
         text = self.builder.get_object('template').get_text()
         if len(text):
             self.settings['template'] = text
         else:
             self.settings['template'] = "[Rhythmbox] {title} by #{artist} from #{album}"
-            
+
 class Requests:
     IDENTICA = {
         'key'   :'NzljNWU2MDFjNmQzMTU0ZDRhMTkwMTRmZmI1MWU2Zjk=',
@@ -381,87 +378,87 @@ class Requests:
         'authorization':'http://getglue.com/oauth/authorize',
         'post': 'http://api.getglue.com/v2/user/addCheckin?',
     }
-    
+
     def __init__(self, note):
         self.note_label = note
-        
+
         self.consumer = None
         self.request_token = None
         self.api = None
         self.account = None
-        
+
         #import socks
         #self.proxy_info = httplib2.ProxyInfo(socks.PROXY_TYPE_SOCKS5, 'localhost', 71)
-        self.proxy_info = None 
+        self.proxy_info = None
 
     def authorize(self, account):
         self.account = account
-        
+
         if account == 'twitter':
             self.api = self.TWITTER
         elif account == 'identi.ca':
             self.api = self.IDENTICA
         else:
             self.api = self.GETGLUE
-            
+
         self.request_token = None
-        
+
         key = base64.b64decode(self.api['key'])
         secret = base64.b64decode(self.api['secret'])
-        
+
         self.consumer = oauth.Consumer(key, secret)
         client = oauth.Client(self.consumer, proxy_info=self.proxy_info)
-        
+
         resp, content = client.request(self.api['request_token'])
-        
+
         if resp['status'] != '200':
             self.note_label.set_text(content)
             return False
-        
+
         self.request_token = dict(urlparse.parse_qsl(content))
-        
+
         url = "%s?oauth_token=%s" % (self.api['authorization'] , self.request_token['oauth_token'])
         self.note_label.set_markup('Opening authorize link in default web browser.')
         webbrowser.open_new(url)
         return True
-    
+
     def exchange(self, pin_code):
         token = oauth.Token(self.request_token['oauth_token'], self.request_token['oauth_token_secret'])
         token.set_verifier(pin_code)
-        
+
         client = oauth.Client(self.consumer, token, proxy_info=self.proxy_info)
-        
+
         resp, content = client.request(self.api['access_token'], "POST")
-        
+
         if resp['status'] != '200':
             self.note_label.set_text(content)
             return False
-        
+
         access_token = dict(urlparse.parse_qsl(content))
-        
+
         self.access_token = access_token['oauth_token']
         self.access_token_secret = access_token['oauth_token_secret']
-        
+
         self.note_label.set_text('Done! Choose an alias and save')
         return True
-    
+
     def post(self, account, entry, title, album, artist):
         text = entry.get_text()
         entry.set_text('Wait! (This Box will hide if done!')
-        
+
         while Gtk.events_pending():
             Gtk.main_iteration()
-        
+
         if account[1] == 'twitter':
             api = self.TWITTER
         elif account[1] == 'identi.ca':
             api = self.IDENTICA
         else:
             api = self.GETGLUE
-        
+
         key = base64.b64decode(api['key'])
         secret = base64.b64decode(api['secret'])
-            
+
         if api == self.GETGLUE:
             params={
                 'app':"Rhythmbox",
@@ -475,7 +472,7 @@ class Requests:
             link=api['post']+urllib.urlencode(params)
 
             resp, content = client.request(link, 'GET')
-       
+
             if resp['status'] != '200':
                 doc=libxml2.parseDoc(content)
                 code=doc.xpathEval("/adaptiveblue/error/code")[0].content
@@ -516,5 +513,5 @@ class Requests:
             except urllib2.URLError as err:
                 entry.set_text('Err: %s' % err)
                 return False
-            
+
             return True
